@@ -9,8 +9,10 @@ wayfinder: map
 
 ## Notes
 
-- 当前项目目录：`C:/Users/liyongquan/agent panel/deep-module-mapper/`（非 git 仓库）。
-- 使用 local-markdown tracker：地图和 ticket 以 Markdown 文件存放在 `deep-module-mapper/wayfinder/` 目录。
+- 当前项目目录：`C:/Users/liyongquan/agent panel/deep-module-mapper/`。
+- **GitHub 仓库**：https://github.com/li-yongqvan/deep-module-mapper
+- **Canonical wayfinder map**：GitHub issue #1 — https://github.com/li-yongqvan/deep-module-mapper/issues/1
+- 本地 `wayfinder/*.md` 文件是 GitHub issues 的 mirror/缓存。
 - 共同语言：`deep-module-mapper/UBIQUITOUS_LANGUAGE.md`。
 - 用户偏好：先理解原理再实操（CLAUDE.md）。
 - 已确认原则：模块 = 实现 + 端口；接口 = 端口/说明书；依赖越简单越好。
@@ -26,15 +28,19 @@ wayfinder: map
 - [grilling-interface-criteria](grilling-interface-criteria.md) — 第一版接口 = 公开函数/导出符号；描述 = 硬事实 + AI 润色；语言 = Python；HTTP/CLI 形态后续再做。
 - [prototype-ui-interaction](prototype-ui-interaction.md) — 节点 = 圆角矩形；端口 = 小圆点；现实视图 = 交通灯语义；自定义画布 = 中性灰蓝 + 评审后标红。
 - [research-dependency-detection](research-dependency-detection.md) — 模块边界 = 一个 `.py` 文件；AST-only 提取；jedi 可选；动态导入标 unresolved；第三方包当不透明节点。
+- [design-data-schema](design-data-schema.md) — JSON schema、REST API、轮询刷新、AI 调用合同、画布保存格式已确认。
+
+## Open frontier
+
+- GitHub issue #3: [Implement Python AST parser](https://github.com/li-yongqvan/deep-module-mapper/issues/3) — 当前 frontier ticket，开始写第一版解析器。
 
 ## Not yet specified
 
-- 模块边界自动切分：目录/包/文件，合并/拆分规则（已确认文件为默认，目录级下钻后续）。
-- 实时刷新机制：文件监听 / git diff / 轮询。
+- 实时刷新机制：第一版确认轮询，细节待实现时定。
 - 图布局算法：大图如何自动排版。
 - 数据持久化：模块元数据、用户画布、人工修改存哪。
 - 启动方式：Docker / 脚本 / dev server。
-- 界面二交互细节：选模块、拖拽、连箭头、保存/读取理想设计。
+- 界面二交互细节：选模块、拖拽、连箭头、保存/读取理想设计（prototype 已部分验证）。
 - 后续关卡功能（已确认纳入范围，待 ticketing）：
   - #6 变更影响追踪（trace path）
   - #7 模块目录（metadata + relations）
