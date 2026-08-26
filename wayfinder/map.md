@@ -29,10 +29,11 @@ wayfinder: map
 - [prototype-ui-interaction](prototype-ui-interaction.md) — 节点 = 圆角矩形；端口 = 小圆点；现实视图 = 交通灯语义；自定义画布 = 中性灰蓝 + 评审后标红。
 - [research-dependency-detection](research-dependency-detection.md) — 模块边界 = 一个 `.py` 文件；AST-only 提取；jedi 可选；动态导入标 unresolved；第三方包当不透明节点。
 - [design-data-schema](design-data-schema.md) — JSON schema、REST API、轮询刷新、AI 调用合同、画布保存格式已确认。
+- [implement-python-parser](implement-python-parser.md) — 第一版 Python AST 解析器已完成（PR #4，2026-08-26）：单一公共 API `scan_codebase`、端口/六类边/externalModules/diagnostics 提取、语法错误隔离、venv 排除、stdlib 忽略；39 测试全绿；设计文档 v3 + 评审意见书（条件通过，F1/F2/F10 已解决）+ grilling 决策落档均已归档。
 
 ## Open frontier
 
-- GitHub issue #3: [Implement Python AST parser](https://github.com/li-yongqvan/deep-module-mapper/issues/3) — 当前 frontier ticket，开始写第一版解析器。
+- ~~GitHub issue #3: [Implement Python AST parser](https://github.com/li-yongqvan/deep-module-mapper/issues/3)~~ — **已完成**（PR #4，2026-08-26，见 Decisions so far）。下一 frontier 未定，建议从「后端 API / 前端接收 scan_codebase 输出」或 issue #6/#7/#9/#10 中选取。
 
 ## Not yet specified
 
