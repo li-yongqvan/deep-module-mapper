@@ -34,8 +34,8 @@ wayfinder: map
 
 ## Open frontier
 
-- GitHub issue #7: [Build frontend real-view with React Flow](https://github.com/li-yongqvan/deep-module-mapper/issues/7) — 当前 frontier ticket，实现现实视图：输入目录 → 轮询扫描状态 → React Flow 渲染模块图。
-- GitHub issue #8: [Build backend AI endpoints: descriptions + review](https://github.com/li-yongqvan/deep-module-mapper/issues/8) — 当前 frontier ticket，与 #7 并行；实现 `/api/descriptions/*` 和 `/api/review`，模型调用可先 stub。
+- GitHub issue #7: [Build frontend real-view with React Flow](https://github.com/li-yongqvan/deep-module-mapper/issues/7) — 当前 active frontier ticket，正在分配执行 Agent。
+- GitHub issue #8: [Build backend AI endpoints: descriptions + review](https://github.com/li-yongqvan/deep-module-mapper/issues/8) — 已创建但**暂不分配**，等 #7 完成后再决定是串行还是并行。
 
 ## Not yet specified
 
