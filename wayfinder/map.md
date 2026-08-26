@@ -30,10 +30,11 @@ wayfinder: map
 - [research-dependency-detection](research-dependency-detection.md) — 模块边界 = 一个 `.py` 文件；AST-only 提取；jedi 可选；动态导入标 unresolved；第三方包当不透明节点。
 - [design-data-schema](design-data-schema.md) — JSON schema、REST API、轮询刷新、AI 调用合同、画布保存格式已确认。
 - [implement-python-parser](implement-python-parser.md) — 第一版 Python AST 解析器已完成（PR #4，2026-08-26）：单一公共 API `scan_codebase`、端口/六类边/externalModules/diagnostics 提取、语法错误隔离、venv 排除、stdlib 忽略；39 测试全绿；设计文档 v3 + 评审意见书（条件通过，F1/F2/F10 已解决）+ grilling 决策落档均已归档。
+- [build-core-backend-api](handoff-issue-5-complete.md) — 后端核心 API 已完成（PR #6）：Starlette + Uvicorn，内存 job 状态，三端点 `/api/scan`/`/status`/`/graph`，44 测试全绿；CORS、job 驱逐、错误格式等决策已落档。
 
 ## Open frontier
 
-- GitHub issue #5: [Build core backend API: scan + graph endpoints](https://github.com/li-yongqvan/deep-module-mapper/issues/5) — 当前 frontier ticket，实现后端核心 API，让前端可以请求扫描并获取 Graph。
+- GitHub issue #7: [Build frontend real-view with React Flow](https://github.com/li-yongqvan/deep-module-mapper/issues/7) — 当前 frontier ticket，实现现实视图：输入目录 → 轮询扫描状态 → React Flow 渲染模块图。
 
 ## Not yet specified
 
@@ -42,11 +43,13 @@ wayfinder: map
 - 数据持久化：模块元数据、用户画布、人工修改存哪。
 - 启动方式：Docker / 脚本 / dev server。
 - 界面二交互细节：选模块、拖拽、连箭头、保存/读取理想设计（prototype 已部分验证）。
-- 后续关卡功能（已确认纳入范围，待 ticketing）：
-  - #6 变更影响追踪（trace path）
-  - #7 模块目录（metadata + relations）
-  - #9 循环依赖与孤儿模块检测
-  - #10 遗留模块渐进式 enforcement
+- 后续关卡功能（已确认纳入范围，待 ticketing，编号待分配）：
+  - 变更影响追踪（trace path）
+  - 模块目录（metadata + relations）
+  - 循环依赖与孤儿模块检测
+  - 遗留模块渐进式 enforcement
+  - AI 描述与评审端点（`/api/descriptions/*`、`/api/review`）
+  - 设计画布持久化（`/api/designs`）
 
 ## Out of scope
 
