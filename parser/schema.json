@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/li-yongqvan/deep-module-mapper/blob/main/parser/schema.json",
+  "title": "Deep Module Mapper scan graph",
+  "description": "Output contract of parser.scan_codebase. Canonical shape from issue #2 (5 top-level keys).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["modules", "ports", "edges", "externalModules", "diagnostics"],
+  "properties": {
+    "modules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "path", "ports"],
+        "properties": {
+          "id": { "type": "string", "description": "Relative path, posix separators" },
+          "path": { "type": "string" },
+          "ports": { "type": "array", "items": { "$ref": "#/$defs/port" } }
+        }
+      }
+    },
+    "ports": {
+      "type": "array",
+      "description": "Flat port list, one entry per module port, carrying moduleId",
+      "items": {
+        "allOf": [
+          { "$ref": "#/$defs/port" },
+          {
+            "type": "object",
+            "required": ["moduleId"],
+            "properties": {
+              "moduleId": { "type": "string" }
+            }
+          }
+        ]
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "target", "kind", "sites"],
+        "properties": {
+          "source": { "type": "string" },
+          "target": { "type": "string" },
+          "targetPort": { "type": ["string", "null"] },
+          "kind": { "enum": ["import", "from_import", "call", "inheritance", "annotation", "decorator"] },
+          "sites": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["line"],
+              "properties": { "line": { "type": "integer" } }
+            }
+          }
+        }
+      }
+    },
+    "externalModules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "kind"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "kind": { "enum": ["third_party"] }
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "moduleId", "line", "message"],
+        "properties": {
+          "kind": { "enum": ["dynamic_import", "unresolved_symbol", "parse_error"] },
+          "moduleId": { "type": "string" },
+          "line": { "type": "integer" },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "port": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "line", "signature", "params"],
+      "properties": {
+        "kind": { "enum": ["function", "class", "export"] },
+        "name": { "type": "string" },
+        "line": { "type": "integer" },
+        "signature": { "type": "string" },
+        "params": { "type": "array", "items": { "type": "string" } },
+        "docstring": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
