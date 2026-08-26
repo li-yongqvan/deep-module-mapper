@@ -22,8 +22,22 @@ status: complete
 - **depthScore 评分**：naive `maxLine/portCount`，阈值 50/15，零端口判浅；绿/黄/红 = `#34d399/#fbbf24/#f87171`。
 - **ModuleNode**：每模块左右各一个 Handle（模块级 source/target，非 per-port，见偏差声明）。
 - **Inspector**：右侧固定面板，展示模块路径/端口签名/深度分、依赖 kinds 与调用点、诊断列表。
-- **测试**：`frontend/src/__tests__/`（ScanForm / depthScore / graphToFlow / useScanJob，MSW mock，含 404、getGraph 失败、空图、暂态重试用例），共 **18 项**。
+- **测试**：`frontend/src/__tests__/`（ScanForm / depthScore / graphToFlow / useScanJob，MSW mock，含 404、getGraph 失败、空图、暂态重试用例），共 **19 项**。
 - **fixture**：`frontend/src/__tests__/fixtures/sample_pkg.graph.json`（真实扫描产物，供测试与评分校准）。
+
+## Post-merge code-review fixes
+
+合并后对 `frontend/` 跑了两轴 `/code-review`（Standards + Spec），修复如下（commit `08532a7`）：
+
+| 发现 | 修复 |
+|---|---|
+| 边箭头不渲染（`markerEnd` 指向不存在的 marker） | `LabeledEdge.tsx` 移除失效 markerEnd，改用 `MarkerType.ArrowClosed` |
+| 重新扫描/重试按钮失效（`onRescan` 只 `cancel()` 不重扫） | `App.tsx` 记住 `lastPath`，`onRescan` 真正重新 `start(lastPath)` |
+| 诊断需点击才显示（handoff §5 要求免点击） | Inspector 在存在 diagnostics 时免点击渲染 |
+| 真实 fixture 未进测试（M7 半实现） | `graphToFlow.test.ts` 新增真实 sample_pkg 用例（4 内部+2 外部、main→core 5 边聚合 1、外部边存活、无悬空边）+ 节点计数断言；tsconfig 加 `resolveJsonModule` |
+| `scoreColor` 重复 / `DiagnosticSelection` 死代码 | Inspector 复用 `depthScore.scoreColor`；删除无构造点的 DiagnosticSelection/DiagnosticDetail |
+
+**未改**：`@types/node`（Vite react-ts 模板自带，删除会破坏 `vite.config.ts` 类型）；transient-retry 提取与 `(source,target)` 类型化为 judgement/smell 非缺陷，未重构避免引入新 bug。
 
 ## Locked decisions
 
@@ -45,7 +59,7 @@ status: complete
 
 ```bash
 cd frontend
-npm test          # 18 passed（vitest）
+npm test          # 19 passed（vitest，含真实 fixture 用例）
 npm run build     # tsc -b && vite build 成功
 npx tsc --noEmit  # 0 errors
 ```
