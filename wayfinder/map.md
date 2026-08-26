@@ -31,18 +31,16 @@ wayfinder: map
 - [design-data-schema](design-data-schema.md) — JSON schema、REST API、轮询刷新、AI 调用合同、画布保存格式已确认。
 - [implement-python-parser](implement-python-parser.md) — 第一版 Python AST 解析器已完成（PR #4，2026-08-26）：单一公共 API `scan_codebase`、端口/六类边/externalModules/diagnostics 提取、语法错误隔离、venv 排除、stdlib 忽略；39 测试全绿；设计文档 v3 + 评审意见书（条件通过，F1/F2/F10 已解决）+ grilling 决策落档均已归档。
 - [build-core-backend-api](handoff-issue-5-complete.md) — 后端核心 API 已完成（PR #6）：Starlette + Uvicorn，内存 job 状态，三端点 `/api/scan`/`/status`/`/graph`，44 测试全绿；CORS、job 驱逐、错误格式等决策已落档。
+- [build-frontend-real-view](design-doc-issue-7-frontend-real-view.md) — 现实视图前端已完成（PR #9，2026-08-26）：Vite 8.2.2 + React 19.2.8 + `@xyflow/react` 12；路径输入 → 2s 轮询 → React Flow 渲染；红绿灯 naive 评分（`maxLine/portCount`，50/15 暂定）；外部模块灰色虚线节点；同对多边聚合；右侧 Inspector。18 测试全绿 + 真实 fixture 端到端验证。设计文档（合并审计：5 阻断+8 重要+10 次要全部采纳）+ 决策落档均已归档。
 
 ## Open frontier
 
-- GitHub issue #7: [Build frontend real-view with React Flow](https://github.com/li-yongqvan/deep-module-mapper/issues/7) — 当前 active frontier ticket，正在分配执行 Agent。
-- GitHub issue #8: [Build backend AI endpoints: descriptions + review](https://github.com/li-yongqvan/deep-module-mapper/issues/8) — 已创建但**暂不分配**，等 #7 完成后再决定是串行还是并行。
+- GitHub issue #8: [Build backend AI endpoints: descriptions + review](https://github.com/li-yongqvan/deep-module-mapper/issues/8) — 下一候选 frontier ticket，暂不分配；#7 已完成，可决策 #8 与后续关卡（如设计画布、布局优化）的串行/并行顺序。
 
 ## Not yet specified
 
-- 实时刷新机制：第一版确认轮询，细节待实现时定。
-- 图布局算法：大图如何自动排版。
 - 数据持久化：模块元数据、用户画布、人工修改存哪。
-- 启动方式：Docker / 脚本 / dev server。
+- 启动方式：Docker / 脚本 / dev server（当前 dev server：`cd frontend && npm run dev` @ 5175）。
 - 界面二交互细节：选模块、拖拽、连箭头、保存/读取理想设计（prototype 已部分验证）。
 - 后续关卡功能（已确认纳入范围，待 ticketing，编号待分配）：
   - 变更影响追踪（trace path）
@@ -50,6 +48,7 @@ wayfinder: map
   - 循环依赖与孤儿模块检测
   - 遗留模块渐进式 enforcement
   - 设计画布持久化（`/api/designs`）
+- 已定（不再开放）：实时刷新 = 2s 轮询（#7 已实现）；图布局 = 简单网格（dagre 优化留后续）；评分公式 = naive `maxLine/portCount`（50/15 暂定，见设计文档附录 A）。
 
 ## Out of scope
 
