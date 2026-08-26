@@ -33,7 +33,7 @@ wayfinder: map
 
 ## Open frontier
 
-- ~~GitHub issue #3: [Implement Python AST parser](https://github.com/li-yongqvan/deep-module-mapper/issues/3)~~ — **已完成**（PR #4，2026-08-26，见 Decisions so far）。下一 frontier 未定，建议从「后端 API / 前端接收 scan_codebase 输出」或 issue #6/#7/#9/#10 中选取。
+- GitHub issue #5: [Build core backend API: scan + graph endpoints](https://github.com/li-yongqvan/deep-module-mapper/issues/5) — 当前 frontier ticket，实现后端核心 API，让前端可以请求扫描并获取 Graph。
 
 ## Not yet specified
 
