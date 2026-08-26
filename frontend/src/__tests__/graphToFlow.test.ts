@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { graphToFlow, externalNodeId } from '../lib/graphToFlow';
 import type { Graph } from '../api/types';
+// Real scan output from parser/tests/fixtures/sample_pkg (audit M7): stored so
+// graphToFlow/render tests run on real data, not hand-written mocks.
+import samplePkgGraph from './fixtures/sample_pkg.graph.json';
 
 const baseGraph: Graph = {
   modules: [
@@ -27,8 +30,45 @@ describe('graphToFlow', () => {
     const extNode = flow.nodes.find((n) => n.id === externalNodeId('requests'));
     expect(extNode).toBeDefined();
     expect(extNode?.type).toBe('externalNode');
+    // Node counts: 2 internal + 1 external (design doc §8.1).
+    const internal = flow.nodes.filter((n) => n.data.kind === 'module');
+    const external = flow.nodes.filter((n) => n.data.kind === 'external');
+    expect(internal).toHaveLength(2);
+    expect(external).toHaveLength(1);
     // The edge to the external module is kept (not dangling).
     expect(flow.edges.some((e) => e.target === externalNodeId('requests'))).toBe(true);
+  });
+
+  it('handles the real sample_pkg fixture (B1/M2 on real data, audit M7)', () => {
+    const graph = samplePkgGraph as unknown as Graph;
+    const flow = graphToFlow(graph);
+
+    // 4 internal modules + 2 external (requests, sample_pkg).
+    const internal = flow.nodes.filter((n) => n.data.kind === 'module');
+    const external = flow.nodes.filter((n) => n.data.kind === 'external');
+    expect(internal).toHaveLength(4);
+    expect(external).toHaveLength(2);
+    expect(flow.nodes).toHaveLength(6);
+
+    // Real data has 5 edges main.py -> core.py; they aggregate into one.
+    const mainToCore = flow.edges.filter(
+      (e) => e.source === 'main.py' && e.target === 'core.py',
+    );
+    expect(mainToCore).toHaveLength(1);
+    expect(mainToCore[0]?.data?.rawEdges).toHaveLength(5);
+
+    // Real external edges survive, remapped to ext: node ids.
+    const toRequests = flow.edges.filter(
+      (e) => e.target === externalNodeId('requests'),
+    );
+    expect(toRequests.length).toBeGreaterThan(0);
+
+    // No dangling edges (every endpoint resolves to a rendered node).
+    const known = new Set(flow.nodes.map((n) => n.id));
+    for (const e of flow.edges) {
+      expect(known.has(e.source)).toBe(true);
+      expect(known.has(e.target)).toBe(true);
+    }
   });
 
   it('aggregates multiple kinds between the same module pair into one edge (M2)', () => {

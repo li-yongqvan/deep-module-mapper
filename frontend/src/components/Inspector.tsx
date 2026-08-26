@@ -7,6 +7,7 @@ import type { CSSProperties } from 'react';
 import type { Module, Port, Diagnostic } from '../api/types';
 import type { AggregatedEdgeData } from '../lib/graphToFlow';
 import type { DepthScore } from '../lib/depthScore';
+import { scoreColor } from '../lib/depthScore';
 
 export interface NodeSelection {
   type: 'node';
@@ -26,12 +27,7 @@ export interface EdgeSelection {
   data: AggregatedEdgeData;
 }
 
-export interface DiagnosticSelection {
-  type: 'diagnostic';
-  diagnostic: Diagnostic;
-}
-
-export type Selection = NodeSelection | EdgeSelection | DiagnosticSelection;
+export type Selection = NodeSelection | EdgeSelection;
 
 interface InspectorProps {
   selection: Selection | null;
@@ -66,9 +62,6 @@ export default function Inspector({ selection, graphDiagnostics, onClose }: Insp
 
       {selection?.type === 'node' && <NodeDetail selection={selection} />}
       {selection?.type === 'edge' && <EdgeDetail selection={selection} />}
-      {selection?.type === 'diagnostic' && (
-        <DiagnosticDetail selection={selection} />
-      )}
 
       {graphDiagnostics.length > 0 && (
         <div style={{ marginTop: 16 }}>
@@ -136,29 +129,6 @@ function EdgeDetail({ selection }: { selection: EdgeSelection }) {
       </ul>
     </div>
   );
-}
-
-function DiagnosticDetail({ selection }: { selection: DiagnosticSelection }) {
-  const d = selection.diagnostic;
-  return (
-    <div style={{ fontSize: 12, marginTop: 8 }}>
-      <p style={{ margin: '4px 0' }}>
-        {d.moduleId}:{d.line} [{d.kind}]
-      </p>
-      <p style={{ margin: '4px 0', color: 'var(--mid, #fbbf24)' }}>{d.message}</p>
-    </div>
-  );
-}
-
-function scoreColor(score: DepthScore): string {
-  switch (score) {
-    case 'deep':
-      return '#34d399';
-    case 'moderate':
-      return '#fbbf24';
-    case 'shallow':
-      return '#f87171';
-  }
 }
 
 const closeStyle: CSSProperties = {

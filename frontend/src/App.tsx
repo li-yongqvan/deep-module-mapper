@@ -39,6 +39,8 @@ export default function App() {
   const { state, start, cancel } = useScanJob();
   const [selection, setSelection] = useState<Selection | null>(null);
   const [graph, setGraph] = useState<Graph | null>(null);
+  // Last submitted path, so the rescan button can re-run the same scan.
+  const [lastPath, setLastPath] = useState('');
 
   const flowGraph = useMemo(() => (graph ? graphToFlow(graph) : null), [graph]);
 
@@ -72,11 +74,20 @@ export default function App() {
 
   const handleSubmit = useCallback(
     (path: string) => {
+      setLastPath(path);
       void start(path);
       setGraph(null);
     },
     [start],
   );
+
+  // Rescan from the last submitted path (fixes inert "重新扫描" button).
+  const handleRescan = useCallback(() => {
+    if (lastPath) {
+      void start(lastPath);
+      setGraph(null);
+    }
+  }, [lastPath, start]);
 
   const handleNodeClick: NodeMouseHandler<FlowNode> = useCallback(
     (_, node) => {
@@ -148,7 +159,7 @@ export default function App() {
         <ScanStatus
           state={state}
           onCancel={cancel}
-          onRescan={() => (state.kind === 'jobLost' || state.kind === 'networkError' || state.kind === 'timeout' ? cancel() : undefined)}
+          onRescan={handleRescan}
         />
       </header>
 
@@ -207,7 +218,9 @@ export default function App() {
           </ReactFlow>
         )}
 
-        {flowGraph && selection && (
+        {/* Inspector shows on selection, OR when the parser reported
+            diagnostics (handoff §5: show diagnostics without a click). */}
+        {flowGraph && (selection !== null || (graph?.diagnostics?.length ?? 0) > 0) && (
           <Inspector
             selection={selection}
             graphDiagnostics={graph?.diagnostics ?? []}

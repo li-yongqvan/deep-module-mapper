@@ -39,7 +39,9 @@ export default function LabeledEdge({
         style={{
           stroke: 'var(--text-2, #94a3b8)',
           strokeWidth: 2,
-          markerEnd: 'url(#arrowhead)',
+          // Do NOT set markerEnd here: the edge's own markerEnd
+          // (MarkerType.ArrowClosed from graphToFlow) must win, otherwise
+          // arrowheads never render.
         }}
       />
       <EdgeLabelRenderer>
