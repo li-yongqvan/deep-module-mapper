@@ -434,6 +434,18 @@ npm run build
 
 *本文档为实现基线。合并审计修订完成（2026-08-26），可进入实现（分支→脚手架→编码→测试→PR→用户授权→合并）。*
 
-## 附录 A：评分阈值真实分布（M3 校准回填位）
+## 附录 A：评分阈值真实分布（M3 校准回填）
 
-> 待实现第 1 步（§8.4）实跑扫描后回填：各模块 `maxLine` / `portCount` / `ratio` 分布表，以及按分布校准后的阈值建议。
+**实测数据**（2026-08-26，`parser/tests/fixtures/sample_pkg`，真实 Graph JSON 已存为 `frontend/src/__tests__/fixtures/sample_pkg.graph.json`）：
+
+| module | ports | maxLine | ratio | score |
+|---|---|---|---|---|
+| `__init__.py` | 3 | 7 | 2.3 | shallow |
+| `core.py` | 3 | 28 | 9.3 | shallow |
+| `main.py` | 7 | 46 | 6.6 | shallow |
+| `utils.py` | 4 | 28 | 7.0 | shallow |
+
+**观测结论**：
+1. sample_pkg 是小型 fixture（4 模块、端口密集），ratio 全落在 2.3–9.3，全部判「浅」——对小文件这是预期行为，未出现「小文件单端口判深」的误判案例。
+2. 该样本**未覆盖** ratio ≥ 15 的区间，因此 50/15 阈值在真实项目（更大文件、更少公开端口）上的表现仍待校准。实现中阈值已用命名常量（`DEPTH_THRESHOLD_DEEP`/`DEPTH_THRESHOLD_MODERATE`）并在代码注释标注「naive、暂定」，后续可用更大的真实代码库重扫并回填本表。
+
