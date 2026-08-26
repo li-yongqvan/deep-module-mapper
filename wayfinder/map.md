@@ -35,6 +35,7 @@ wayfinder: map
 ## Open frontier
 
 - GitHub issue #7: [Build frontend real-view with React Flow](https://github.com/li-yongqvan/deep-module-mapper/issues/7) — 当前 frontier ticket，实现现实视图：输入目录 → 轮询扫描状态 → React Flow 渲染模块图。
+- GitHub issue #8: [Build backend AI endpoints: descriptions + review](https://github.com/li-yongqvan/deep-module-mapper/issues/8) — 当前 frontier ticket，与 #7 并行；实现 `/api/descriptions/*` 和 `/api/review`，模型调用可先 stub。
 
 ## Not yet specified
 
@@ -48,11 +49,10 @@ wayfinder: map
   - 模块目录（metadata + relations）
   - 循环依赖与孤儿模块检测
   - 遗留模块渐进式 enforcement
-  - AI 描述与评审端点（`/api/descriptions/*`、`/api/review`）
   - 设计画布持久化（`/api/designs`）
 
 ## Out of scope
 
-- C4 层级视图（#8）：用户明确不要。
-- 多格式导出 Mermaid/DOT/JSON（#11）：用户明确不要。
-- Git 历史波动率评分（#12）：用户明确不要。
+- C4 层级视图：用户明确不要。
+- 多格式导出 Mermaid/DOT/JSON：用户明确不要。
+- Git 历史波动率评分：用户明确不要。
