@@ -44,13 +44,30 @@ export interface ExternalNodeSelection {
   externalNames?: string[];
 }
 
+/** A recomposed module container (issue #10): aggregated interface drill-down. */
+export interface RecomposedModuleSelection {
+  type: 'node';
+  kind: 'recomposeModule';
+  id: string;
+  label: string;
+  name: string;
+  description: string;
+  memberAtomNames: string[];
+  memberFileCount: number;
+  ports: Port[];
+  score: DepthScore;
+}
+
 export type NodeSelection =
   | ModuleNodeSelection
   | AtomNodeSelection
-  | ExternalNodeSelection;
+  | ExternalNodeSelection
+  | RecomposedModuleSelection;
 
 export interface EdgeSelection {
   type: 'edge';
+  /** Edge id (set by the recompose canvas so "删除此边" can route it, #3). */
+  id?: string;
   source: string;
   target: string;
   label: string;
@@ -63,9 +80,16 @@ interface InspectorProps {
   selection: Selection | null;
   graphDiagnostics: Diagnostic[];
   onClose: () => void;
+  /** When provided, edge details get a "删除此边" button (recompose mode, #3). */
+  onDeleteEdge?: (edgeId: string) => void;
 }
 
-export default function Inspector({ selection, graphDiagnostics, onClose }: InspectorProps) {
+export default function Inspector({
+  selection,
+  graphDiagnostics,
+  onClose,
+  onDeleteEdge,
+}: InspectorProps) {
   return (
     <aside
       style={{
@@ -91,7 +115,9 @@ export default function Inspector({ selection, graphDiagnostics, onClose }: Insp
       </div>
 
       {selection?.type === 'node' && <NodeDetail selection={selection} />}
-      {selection?.type === 'edge' && <EdgeDetail selection={selection} />}
+      {selection?.type === 'edge' && (
+        <EdgeDetail selection={selection} onDeleteEdge={onDeleteEdge} />
+      )}
 
       {graphDiagnostics.length > 0 && (
         <div style={{ marginTop: 16 }}>
@@ -120,7 +146,45 @@ function NodeDetail({ selection }: { selection: NodeSelection }) {
       return <ExternalDetail selection={selection} />;
     case 'module':
       return <ModuleDetail selection={selection} />;
+    case 'recomposeModule':
+      return <RecomposedModuleDetail selection={selection} />;
   }
+}
+
+function RecomposedModuleDetail({ selection }: { selection: RecomposedModuleSelection }) {
+  return (
+    <div style={{ fontSize: 12, marginTop: 8 }}>
+      <p style={{ margin: '4px 0', fontWeight: 600, fontSize: 13 }}>{selection.name}</p>
+      <p style={{ margin: '4px 0', color: 'var(--text-2, #94a3b8)' }}>
+        {selection.description || '（未填写接口描述）'}
+      </p>
+      <p style={{ margin: '4px 0' }}>
+        深度分：
+        <span style={{ color: scoreColor(selection.score) }}>{selection.score}</span>
+        {' '}（{selection.ports.length} 个端口，{selection.memberFileCount} 个文件）
+      </p>
+      <p style={{ margin: '4px 0' }}>聚合接口（成员功能原子）：</p>
+      <ul style={{ margin: '4px 0', paddingLeft: 16 }}>
+        {selection.memberAtomNames.map((n) => (
+          <li key={n} style={{ marginBottom: 2 }}>
+            {n}
+          </li>
+        ))}
+      </ul>
+      {selection.ports.length > 0 && (
+        <>
+          <p style={{ margin: '4px 0' }}>端口（{selection.ports.length}）：</p>
+          <ul style={{ margin: '4px 0', paddingLeft: 16 }}>
+            {selection.ports.map((p, i) => (
+              <li key={i} style={{ marginBottom: 2 }}>
+                <code style={{ fontSize: 11 }}>{p.signature}</code>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
 }
 
 function ModuleDetail({ selection }: { selection: ModuleNodeSelection }) {
@@ -196,23 +260,56 @@ function ExternalDetail({ selection }: { selection: ExternalNodeSelection }) {
   );
 }
 
-function EdgeDetail({ selection }: { selection: EdgeSelection }) {
+function EdgeDetail({
+  selection,
+  onDeleteEdge,
+}: {
+  selection: EdgeSelection;
+  onDeleteEdge?: (edgeId: string) => void;
+}) {
+  const manual = selection.data.manual === true;
   return (
     <div style={{ fontSize: 12, marginTop: 8 }}>
       <p style={{ margin: '4px 0', wordBreak: 'break-all' }}>
         {selection.source} → {selection.target}
       </p>
       <p style={{ margin: '4px 0' }}>类型：{selection.label}</p>
-      <p style={{ margin: '4px 0' }}>调用点（{selection.data.rawEdges.length} 条边）：</p>
-      <ul style={{ margin: '4px 0', paddingLeft: 16 }}>
-        {selection.data.rawEdges.map((e, i) => (
-          <li key={i}>
-            {e.kind}
-            {e.targetPort ? ` → ${e.targetPort}` : ''} @
-            {e.sites.map((s) => s.line).join(', ')}
-          </li>
-        ))}
-      </ul>
+      {manual ? (
+        // Manual edges have no underlying call sites; skip rawEdges entirely (#1).
+        <p style={{ margin: '4px 0', color: 'var(--accent, #38bdf8)' }}>
+          手动添加的依赖（无底层调用点）
+        </p>
+      ) : (
+        <p style={{ margin: '4px 0' }}>调用点（{selection.data.rawEdges.length} 条边）：</p>
+      )}
+      {!manual && (
+        <ul style={{ margin: '4px 0', paddingLeft: 16 }}>
+          {selection.data.rawEdges.map((e, i) => (
+            <li key={i}>
+              {e.kind}
+              {e.targetPort ? ` → ${e.targetPort}` : ''} @
+              {e.sites.map((s) => s.line).join(', ')}
+            </li>
+          ))}
+        </ul>
+      )}
+      {onDeleteEdge && selection.id && (
+        <button
+          onClick={() => onDeleteEdge(selection.id!)}
+          style={{
+            marginTop: 8,
+            padding: '4px 10px',
+            borderRadius: 6,
+            border: '1px solid var(--warn, #f87171)',
+            background: 'transparent',
+            color: 'var(--warn, #f87171)',
+            fontSize: 11,
+            cursor: 'pointer',
+          }}
+        >
+          删除此边
+        </button>
+      )}
     </div>
   );
 }

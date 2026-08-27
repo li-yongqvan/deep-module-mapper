@@ -111,3 +111,51 @@ See [[parallel-session-worktree-discipline]].
 3. Verification results (test output, manual interaction notes, screenshot if possible).
 4. Next step or blocker.
 5. Any decision that still needs the user.
+
+---
+
+## 完成状态（执行 Agent 回填 · 2026-08-28）
+
+**状态**：✅ 已交付。PR **#14**（OPEN，base=`master`，head=`worktree-issue-10-recomposition`）
+https://github.com/li-yongqvan/deep-module-mapper/pull/14 · **21 文件，+2971 / −105**。
+
+### 六个核心任务 → 交付对应
+
+| 任务 | 交付 |
+|---|---|
+| 1. 第三模式 | `viewMode: 'feature' \| 'real' \| 'recompose'`，顶栏「重组视图」按钮，独立 `<RecomposeCanvas>`（自包 `ReactFlowProvider`），feature/real 共享画布未动 |
+| 2. 模块容器 | React Flow **父节点**容器 + 原子 chip 子节点；中文名可双击编辑；拖进/拖出；不在显式模块的原子 = 自己的隐式单原子模块 |
+| 3. 模块间依赖边 | 自动聚合（复用 `aggregateEdges`）∪ 手动新增 − 手动隐藏；Inspector 可删手动边 |
+| 4. 重组后重渲染 | `deriveNodes` + `finalEdges` 纯函数按 design 重派生，design 状态提升到 App，切视图不丢未保存编辑 |
+| 5. 保存/加载/重置 | 工具栏按钮；localStorage（`dmm:recompose:v1:<encodedPath>`）；重置 = manifest 派生建议分组 |
+| 6. 测试 + README | 新增 6 个测试文件 + Inspector 扩展；`frontend/README.md` 增三视图与重组用法 |
+
+### PR 需拍板的四个决策 → 定案（详见 `wayfinder/grilling-decisions/issue-10-recomposition-decisions.md`）
+
+1. **模块画布表示** = 父节点容器（模块）+ 子节点（原子 chip），一个原子单独成模块（隐式）。
+2. **持久化** = localStorage（按代码库路径分 key）；`/api/designs` 是后续 ticket，未碰后端。
+3. **模块能否嵌套** = **V1 不嵌套**。
+4. **模块命名** = 自动派生中文名 + 双击编辑；`nameCustomized`/`descriptionCustomized` 标记，重扫不覆盖用户编辑。
+
+补充定案：模块边语义 = 自动聚合 + 手动增删；第三方依赖节点保留在重组画布上。
+
+### 验证结果
+
+- `npm test`：13 文件 / **99 测试全绿**（含空模块拖入回归、re-id、改名保持、#8 坐标一致、转移表每行）。
+- `npx tsc --noEmit` / `tsc -b`：**0 错误**；`npm run build` 成功；lint 无 error。
+- Playwright 冒烟：`smoke_recompose.py`（建模块/拖入/改名/保存重载/未保存保留/重置）九步全过；`smoke_edges.py`（自动边/手动连线/保存恢复/Inspector 删除）全流程过。
+- 过程中发现并修复 **2 个真实逻辑 bug**（拖入空模块时目标被误删、对偶删除提前返回），均有回归测试钉住。
+
+### 红线合规
+
+未改 parser 公共 API、未动 `/api/scan/*` 三端点、未做 AI 聚合（#11）、未做画布评审端点；未更新 `wayfinder/map.md`、未建/改/关 issue、未排期、未合并 PR。
+
+### 已补文档
+
+`UBIQUITOUS_LANGUAGE.md` 补「功能原子」「模块容器」术语 + 模块双义说明（commit `634028e`，评审基线 #16 的可选部分，经统筹方同意后补）。
+
+### 待统筹方
+
+- **评审 PR #14** 并合入；合并后本 worktree `deep-module-mapper-issue-10` 可清理。
+- 后续 ticket：AI 聚合（#11）将以本层数据源替换手工 manifest；画布评审端点另行安排。
+
