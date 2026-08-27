@@ -8,9 +8,10 @@
  *    → aggregate into one edge, merging labels, keeping all sites (D12).
  *  - M5: an empty `modules` array must not crash React Flow → return empty lists.
  */
-import { MarkerType, type Node, type Edge as FlowEdge } from '@xyflow/react';
+import { type Node, type Edge as FlowEdge } from '@xyflow/react';
 import type { Graph } from '../api/types';
 import { depthScore, type DepthScore } from './depthScore';
+import { aggregateEdges } from './aggregateEdges';
 
 export interface ModuleNodeData {
   kind: 'module';
@@ -35,6 +36,8 @@ export type FlowNode = Node<ModuleNodeData | ExternalNodeData>;
 export interface AggregatedEdgeData {
   kinds: string[];
   rawEdges: Graph['edges'];
+  /** Simplified label for non-developer views (feature view); real view leaves it unset. */
+  displayLabel?: string;
   // React Flow v12 requires node/edge data to satisfy Record<string, unknown>.
   [key: string]: unknown;
 }
@@ -106,32 +109,7 @@ export function graphToFlow(graph: Graph): FlowGraph {
   };
 
   // Aggregate edges by (source, target); drop dangling edges (B1 backstop).
-  const grouped = new Map<string, Graph['edges']>();
-  for (const edge of graph.edges) {
-    const source = resolveEndpoint(edge.source);
-    const target = resolveEndpoint(edge.target);
-    if (source === null || target === null) continue;
-    const key = `${source}->${target}`;
-    const list = grouped.get(key) ?? [];
-    list.push(edge);
-    grouped.set(key, list);
-  }
-
-  const edges: FlowEdge<AggregatedEdgeData>[] = [...grouped.entries()].map(
-    ([key, rawEdges], index) => {
-      const [source, target] = key.split('->');
-      const kinds = [...new Set(rawEdges.map((e) => e.kind))];
-      return {
-        id: `edge-${index}-${source}->${target}`,
-        source,
-        target,
-        type: 'labeledEdge',
-        label: kinds.join(', '),
-        data: { kinds, rawEdges },
-        markerEnd: { type: MarkerType.ArrowClosed },
-      };
-    },
-  );
+  const edges = aggregateEdges(graph.edges, resolveEndpoint);
 
   return { nodes: [...internalNodes, ...externalNodes], edges, isEmpty };
 }

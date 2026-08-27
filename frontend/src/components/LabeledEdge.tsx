@@ -1,7 +1,11 @@
 /**
- * Edge with a kind label. Because edges are aggregated by (source, target)
+ * Edge with a label. Because edges are aggregated by (source, target)
  * (D12 / audit M2), `label` holds the merged kinds (e.g. "import, call");
  * the Inspector shows the full raw edges + call sites.
+ *
+ * The feature view (issue #8 C1) sets `data.displayLabel` (e.g. "依赖") so a
+ * non-developer sees one plain Chinese word instead of developer kinds; the
+ * real view leaves it unset and falls back to the merged kinds.
  */
 import {
   BaseEdge,
@@ -58,7 +62,7 @@ export default function LabeledEdge({
             pointerEvents: 'none',
           }}
         >
-          {data?.kinds.join(', ') ?? ''}
+          {data?.displayLabel ?? data?.kinds.join(', ') ?? ''}
         </div>
       </EdgeLabelRenderer>
     </>

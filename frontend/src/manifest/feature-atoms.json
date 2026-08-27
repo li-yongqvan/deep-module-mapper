@@ -1,0 +1,30 @@
+{
+  "atoms": [
+    {
+      "id": "scan-and-parse",
+      "name": "扫描并解析代码库",
+      "description": "读取代码库，提取每个文件的公开接口与依赖关系",
+      "files": [
+        "parser/__init__.py",
+        "parser/__main__.py",
+        "parser/_scanner.py",
+        "parser/_ports.py",
+        "parser/_edges.py",
+        "parser/_external.py",
+        "parser/_diagnostics.py",
+        "parser/_schema.py"
+      ]
+    },
+    {
+      "id": "scan-api",
+      "name": "扫描 API 服务",
+      "description": "把扫描功能封装成 HTTP 接口，管理扫描任务与结果",
+      "files": [
+        "backend/backend/app.py",
+        "backend/backend/models.py",
+        "backend/backend/scanner.py",
+        "backend/backend/store.py"
+      ]
+    }
+  ]
+}

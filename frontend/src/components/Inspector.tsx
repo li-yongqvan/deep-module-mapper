@@ -2,6 +2,10 @@
  * Right-side fixed inspector panel (audit M8): shows details for the
  * currently selected node, edge, or diagnostic. Fixed position + width keeps
  * the layout predictable.
+ *
+ * Issue #8 adds two drill-down branches: an *atom* node shows its Chinese
+ * name, one-line description, depth score and member files with their ports;
+ * the aggregated *external* ("第三方依赖") node lists the concrete libraries.
  */
 import type { CSSProperties } from 'react';
 import type { Module, Port, Diagnostic } from '../api/types';
@@ -9,15 +13,41 @@ import type { AggregatedEdgeData } from '../lib/graphToFlow';
 import type { DepthScore } from '../lib/depthScore';
 import { scoreColor } from '../lib/depthScore';
 
-export interface NodeSelection {
+export interface ModuleNodeSelection {
   type: 'node';
-  kind: 'module' | 'external';
+  kind: 'module';
   id: string;
   label: string;
   module?: Module;
   score?: DepthScore;
   diagnostics?: string[];
 }
+
+export interface AtomNodeSelection {
+  type: 'node';
+  kind: 'atom';
+  id: string;
+  label: string;
+  name: string;
+  description: string;
+  files: string[];
+  modules: Module[];
+  score: DepthScore;
+  portCount: number;
+}
+
+export interface ExternalNodeSelection {
+  type: 'node';
+  kind: 'external';
+  id: string;
+  label: string;
+  externalNames?: string[];
+}
+
+export type NodeSelection =
+  | ModuleNodeSelection
+  | AtomNodeSelection
+  | ExternalNodeSelection;
 
 export interface EdgeSelection {
   type: 'edge';
@@ -83,14 +113,17 @@ export default function Inspector({ selection, graphDiagnostics, onClose }: Insp
 }
 
 function NodeDetail({ selection }: { selection: NodeSelection }) {
-  if (selection.kind === 'external') {
-    return (
-      <div style={{ fontSize: 12, marginTop: 8 }}>
-        <p style={{ margin: '4px 0' }}>类型：第三方模块</p>
-        <p style={{ margin: '4px 0', wordBreak: 'break-all' }}>{selection.label}</p>
-      </div>
-    );
+  switch (selection.kind) {
+    case 'atom':
+      return <AtomDetail selection={selection} />;
+    case 'external':
+      return <ExternalDetail selection={selection} />;
+    case 'module':
+      return <ModuleDetail selection={selection} />;
   }
+}
+
+function ModuleDetail({ selection }: { selection: ModuleNodeSelection }) {
   const ports = selection.module?.ports ?? [];
   return (
     <div style={{ fontSize: 12, marginTop: 8 }}>
@@ -106,6 +139,59 @@ function NodeDetail({ selection }: { selection: NodeSelection }) {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+function AtomDetail({ selection }: { selection: AtomNodeSelection }) {
+  return (
+    <div style={{ fontSize: 12, marginTop: 8 }}>
+      <p style={{ margin: '4px 0', fontWeight: 600, fontSize: 13 }}>{selection.name}</p>
+      <p style={{ margin: '4px 0', color: 'var(--text-2, #94a3b8)' }}>{selection.description}</p>
+      <p style={{ margin: '4px 0' }}>
+        深度分：
+        <span style={{ color: scoreColor(selection.score) }}>{selection.score}</span>
+        {' '}（{selection.portCount} 个端口）
+      </p>
+      <p style={{ margin: '4px 0' }}>成员文件（{selection.files.length}）：</p>
+      <ul style={{ margin: '4px 0', paddingLeft: 16 }}>
+        {selection.modules.map((m) => (
+          <li key={m.id} style={{ marginBottom: 6 }}>
+            <div style={{ wordBreak: 'break-all' }}>{m.id}</div>
+            <ul style={{ margin: '2px 0 0', paddingLeft: 16 }}>
+              {m.ports.length === 0 && (
+                <li style={{ fontSize: 10, color: 'var(--text-2, #94a3b8)' }}>无公开端口</li>
+              )}
+              {m.ports.map((p, i) => (
+                <li key={i}>
+                  <code style={{ fontSize: 10 }}>{p.signature}</code>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ExternalDetail({ selection }: { selection: ExternalNodeSelection }) {
+  return (
+    <div style={{ fontSize: 12, marginTop: 8 }}>
+      <p style={{ margin: '4px 0' }}>类型：第三方模块</p>
+      <p style={{ margin: '4px 0', wordBreak: 'break-all' }}>{selection.label}</p>
+      {selection.externalNames && selection.externalNames.length > 0 && (
+        <>
+          <p style={{ margin: '4px 0' }}>具体依赖（{selection.externalNames.length}）：</p>
+          <ul style={{ margin: '4px 0', paddingLeft: 16 }}>
+            {selection.externalNames.map((n) => (
+              <li key={n}>
+                <code style={{ fontSize: 11 }}>{n}</code>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }
