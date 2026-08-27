@@ -70,6 +70,27 @@ npm run lint      # exit 0（仅 #7 既有警告）
 3. **功能视图边 label 简化为「依赖」**：kinds 术语对非开发者无意义；`data.rawEdges` 全保留供点边下钻。
 4. **两原子深度分均 shallow**（ratio 10.8/10.5）：naive 启发式对小型库的真实结果，README 已声明，阈值校准留后续。
 
+## Code-review 结论（2026-08-27，两轴评审 PR #12）
+
+**结论：无阻塞，可合并；发现项待统筹方定夺「合并前修 vs 合并后修」。**
+
+### Standards（对照 #7 设计文档约定 + smell baseline）
+
+- **硬偏离（已声明）**：`ExternalNode` 补 Handle——违反 #7 设计文档 D11 / 不变量 #10「无 Handle」，是修复 React Flow **error #008**（外部边此前两视图均静默丢弃）的刻意改动；**现实视图行为变更**（外部边现在可渲染），需统筹方知情接受。
+- **判断项**：新代码用 inline styles（延续既有偏离，非新增）。
+- **smell（judgement call）**：
+  1. `handleStyle` 三文件重复（ModuleNode/ExternalNode/FeatureAtomNode）——#7 §5.6 本就规划共享 `PortHandle.tsx`，本 diff 复制两次未做；
+  2. `ModuleNode` 仍硬编码 `width:160`（`NODE_WIDTH` 常量只统一了一半）；
+  3. `'依赖'` 用 `formatLabel` + `extraData.displayLabel` 双通道表达，`LabeledEdge` 只渲染后者；
+  4. App 原子点击重滤 `graph.modules` 重建成员（轻微 Feature Envy）。
+- **D12 保留确认**：`aggregateEdges.ts` 提取逐字节一致（分组键 / id / label / `data:{kinds,rawEdges}` / markerEnd 相同），32/32 测试佐证。
+
+### Spec（issue #8 九条验收）
+
+- **8/9 通过；1 部分**：标准 8「下钻」仅 transform 层测 `data.files`，**Inspector 下钻 UI 无渲染测试**（整个 Inspector 组件无组件测试）。
+- **标准 6 caveat**：原子评分 = 成员端口并集（之和），未真正兑现「fewer ports」语义——spec 措辞含糊，非 bug，记为已知局限。
+- 范围外行为均判定「有记录扩展」（非违规）：第三方节点（D2，用户确认）、默认功能视图+切换（D1，用户确认）、ExternalNode 补 Handle（合理 bug 修复）、边 label「依赖」（C1，在 spec 内）。
+
 ## Known risks / limits
 
 1. **curated manifest 与扫描根耦合**：manifest 路径相对仓库根，**从仓库根扫描才命中**；扫子目录得空功能视图（有提示 + 可切现实视图）。README 已注明。
@@ -82,7 +103,8 @@ npm run lint      # exit 0（仅 #7 既有警告）
 
 - **PR #12 评审 + 合并授权**——合并、关 issue #8、更新 `wayfinder/map.md` 均为统筹方职责，我未执行。
 - **ExternalNode Handle 修复的复审取舍**（见上「偏差/修复声明 2」）——是否随本 PR 一并接受。
-- 验收标准 9 条已全覆盖（§5/§8 + 测试），无遗漏阻塞项。
+- **评审发现项修复策略（新增）**：code-review 无阻塞，但发现项需定夺「合并前修 vs 合并后修」——#7 先例为合并后修复；本 PR 未合并，合并前修更干净。若选合并前修，执行分支可出低成本修复提交（抽共享 `PortHandle`、`ModuleNode` 改用 `NODE_WIDTH`、`'依赖'` 单通道、补 Inspector 下钻渲染测试），随 PR #12 推送。
+- 验收标准 9 条：8 通过 / 1 部分（标准 8 下钻渲染测试缺失，见 Code-review 结论）。
 
 ## Completion criterion
 
