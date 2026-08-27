@@ -13,9 +13,9 @@ manifest.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Protocol
 
 from .config import EnvConfig
+from .providers import Provider, ProviderResult
 
 # Exit codes (§5.8): 0 = authoritative manifest written; 1 = fatal config or
 # input error (bad path, scan failure, missing LLM_API_KEY); 2 = AI aggregation
@@ -35,14 +35,6 @@ class FatalError(Exception):
 class AggregationFailed(Exception):
     """AI aggregation failed after retries → exit 2. Never falls back to the
     hand-maintained manifest and never writes any manifest (U1/D9, INV5)."""
-
-
-class Provider(Protocol):
-    """Injection seam for model providers (wired in S5; fakes in tests)."""
-
-    name: str
-
-    def generate(self, system: str, user: str) -> object: ...  # S2 contract
 
 
 def run_aggregation(
