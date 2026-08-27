@@ -1,9 +1,16 @@
 /**
- * External (third-party) module node: grey dashed border, no score, no
- * handles (D11 / audit B1). Keeps third-party imports visible without
- * implying any deep/shallow semantics for them.
+ * External (third-party) module node: grey dashed border, no score (D11 /
+ * audit B1). Keeps third-party imports visible without implying any
+ * deep/shallow semantics for them.
+ *
+ * NOTE (issue #8): this node DOES render a source/target handle pair. Without
+ * handles React Flow cannot attach edges to it (error #008: "Couldn't create
+ * edge for target handle id null"), so external edges were silently dropped
+ * in both views. Handles fix the edge rendering for the real view and the
+ * feature view's aggregated "第三方依赖" node alike.
  */
-import type { Node, NodeProps } from '@xyflow/react';
+import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
+import type { CSSProperties } from 'react';
 import type { ExternalNodeData } from '../lib/graphToFlow';
 
 export default function ExternalNode({ data }: NodeProps<Node<ExternalNodeData>>) {
@@ -29,6 +36,17 @@ export default function ExternalNode({ data }: NodeProps<Node<ExternalNodeData>>
       <div style={{ marginTop: 4, fontSize: 10, opacity: 0.8 }}>
         third-party
       </div>
+      <Handle type="target" position={Position.Left} style={handleStyle} />
+      <Handle type="source" position={Position.Right} style={handleStyle} />
     </div>
   );
 }
+
+/** 10px circular accent handle with a 2px node-color border (prototype §2.6). */
+const handleStyle: CSSProperties = {
+  width: 10,
+  height: 10,
+  borderRadius: '50%',
+  background: 'var(--accent, #38bdf8)',
+  border: '2px solid var(--bg, #0f172a)',
+};
