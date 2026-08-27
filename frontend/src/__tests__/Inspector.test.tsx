@@ -2,12 +2,13 @@
  * Inspector drill-down render tests (issue #8 spec criterion 8 — the atom
  * drill-down UI branch was previously untested).
  */
-import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 import Inspector, {
   type AtomNodeSelection,
   type ExternalNodeSelection,
   type EdgeSelection,
+  type RecomposedModuleSelection,
 } from '../components/Inspector';
 
 describe('Inspector', () => {
@@ -89,5 +90,73 @@ describe('Inspector', () => {
     expect(screen.getByText('atom:scan-api → atom:scan-and-parse')).toBeInTheDocument();
     expect(screen.getByText(/类型：call, from_import/)).toBeInTheDocument();
     expect(screen.getByText(/from_import @7/)).toBeInTheDocument();
+  });
+
+  it('renders a manual edge without rawEdges and does not throw (#1)', () => {
+    const selection: EdgeSelection = {
+      type: 'edge',
+      id: 'manual-edge-mod:a->mod:b',
+      source: 'mod:a',
+      target: 'mod:b',
+      label: '手动',
+      data: { manual: true, kinds: [], rawEdges: [], displayLabel: '手动' },
+    };
+    render(
+      <Inspector selection={selection} graphDiagnostics={[]} onClose={() => {}} />,
+    );
+    expect(screen.getByText(/手动添加的依赖（无底层调用点）/)).toBeInTheDocument();
+  });
+
+  it('shows a delete-edge button when onDeleteEdge is provided and clicks route the edge id (#3)', () => {
+    const onDeleteEdge = vi.fn();
+    const selection: EdgeSelection = {
+      type: 'edge',
+      id: 'module-edge-mod:a->mod:b',
+      source: 'mod:a',
+      target: 'mod:b',
+      label: 'call',
+      data: {
+        kinds: ['call'],
+        rawEdges: [
+          { source: 'p/a.py', target: 'p/b.py', kind: 'call', sites: [{ line: 3 }] },
+        ],
+      },
+    };
+    render(
+      <Inspector
+        selection={selection}
+        graphDiagnostics={[]}
+        onClose={() => {}}
+        onDeleteEdge={onDeleteEdge}
+      />,
+    );
+    fireEvent.click(screen.getByText('删除此边'));
+    expect(onDeleteEdge).toHaveBeenCalledWith('module-edge-mod:a->mod:b');
+  });
+
+  it('renders a recomposed module drill-down: name, interface, members, ports, score', () => {
+    const selection: RecomposedModuleSelection = {
+      type: 'node',
+      kind: 'recomposeModule',
+      id: 'mod:1',
+      label: '目标模块',
+      name: '目标模块',
+      description: '整合扫描与 API 服务',
+      memberAtomNames: ['扫描并解析代码库', '扫描 API 服务'],
+      memberFileCount: 12,
+      ports: [
+        { kind: 'function', name: 'scan', line: 18, signature: 'scan(root_path) -> dict', params: [] },
+      ],
+      score: 'moderate',
+    };
+    render(
+      <Inspector selection={selection} graphDiagnostics={[]} onClose={() => {}} />,
+    );
+    expect(screen.getByText('目标模块')).toBeInTheDocument();
+    expect(screen.getByText('整合扫描与 API 服务')).toBeInTheDocument();
+    expect(screen.getByText(/1 个端口，12 个文件/)).toBeInTheDocument();
+    expect(screen.getByText('扫描并解析代码库')).toBeInTheDocument();
+    expect(screen.getByText('scan(root_path) -> dict')).toBeInTheDocument();
+    expect(screen.getByText('moderate')).toBeInTheDocument();
   });
 });
