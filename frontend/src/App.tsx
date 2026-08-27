@@ -25,8 +25,11 @@ import '@xyflow/react/dist/style.css';
 
 import type { Graph, Module } from './api/types';
 import type { ExternalNodeData, ModuleNodeData } from './lib/graphToFlow';
-import type { AtomNodeData, FeatureFlowGraph } from './lib/graphToFeatureFlow';
-import { graphToFeatureFlow } from './lib/graphToFeatureFlow';
+import {
+  graphToFeatureFlow,
+  type AtomNodeData,
+  type FeatureFlowGraph,
+} from './lib/graphToFeatureFlow';
 import { useScanJob } from './hooks/useScanJob';
 import { graphToFlow, type AggregatedEdgeData } from './lib/graphToFlow';
 import { gridPositions, NODE_WIDTH, ATOM_NODE_WIDTH } from './lib/layout';
@@ -36,6 +39,7 @@ import FeatureAtomNode from './components/FeatureAtomNode';
 import LabeledEdge from './components/LabeledEdge';
 import ScanForm from './components/ScanForm';
 import ScanStatus from './components/ScanStatus';
+import RecomposeCanvas from './components/RecomposeCanvas';
 import Inspector, {
   type Selection,
   type ModuleNodeSelection,
@@ -43,8 +47,18 @@ import Inspector, {
   type ExternalNodeSelection,
   type EdgeSelection,
 } from './components/Inspector';
+// Recompose model helpers (issue #10): design init/sanitize + edge delete for
+// the Inspector's "删除此边" button.
+import { initialDesign } from './lib/recompose/derive';
+import { loadDesign, sanitizeDesign } from './lib/recompose/persistence';
+import {
+  computeAggregatedModuleEdges,
+  edgeKey,
+  onDeleteEdge as recomposeOnDeleteEdge,
+} from './lib/recompose/edges';
+import type { RecomposedDesign } from './lib/recompose/types';
 
-type ViewMode = 'feature' | 'real';
+type ViewMode = 'feature' | 'real' | 'recompose';
 
 /** Union of every node type either view can render. */
 type AppFlowNode = Node<ModuleNodeData | ExternalNodeData | AtomNodeData>;
@@ -61,19 +75,31 @@ export default function App() {
   const { state, start, cancel } = useScanJob();
   const [selection, setSelection] = useState<Selection | null>(null);
   const [graph, setGraph] = useState<Graph | null>(null);
-  // Feature view (atoms) is the default; real view keeps the file-level map.
+  // Feature view (atoms) is the default; real view keeps the file-level map;
+  // recompose view is the issue #10 canvas (atoms -> modules).
   const [viewMode, setViewMode] = useState<ViewMode>('feature');
   // Last submitted path, so the rescan button can re-run the same scan.
   const [lastPath, setLastPath] = useState('');
+  // Recompose design lives in App (not the canvas) so switching views never
+  // loses unsaved edits (§6.8); localStorage is the explicit "保存" write.
+  const [recomposeDesign, setRecomposeDesign] = useState<RecomposedDesign | null>(null);
+
+  // Feature-flow transform, shared by the feature view and the recompose canvas.
+  const featureFlow = useMemo(
+    () => (graph ? graphToFeatureFlow(graph) : null),
+    [graph],
+  );
 
   const flowGraph = useMemo(
     () =>
       graph
         ? viewMode === 'feature'
-          ? graphToFeatureFlow(graph)
-          : graphToFlow(graph)
+          ? featureFlow
+          : viewMode === 'real'
+            ? graphToFlow(graph)
+            : null
         : null,
-    [graph, viewMode],
+    [graph, viewMode, featureFlow],
   );
 
   // Rehydrate React Flow node positions on every new graph or view switch.
@@ -105,13 +131,45 @@ export default function App() {
     }
   }, [state]);
 
+  // Recompute design when the scan settles (#6): a NEW path reloads from that
+  // path's saved design (or the manifest baseline); the SAME path rescanned
+  // keeps the in-memory design (layout + unsaved edits) and only sanitizes it
+  // against the fresh graph.
+  useEffect(() => {
+    if (!featureFlow) return;
+    setRecomposeDesign((d) => {
+      if (d === null) return loadDesign(lastPath) ?? initialDesign(featureFlow);
+      return sanitizeDesign(d, featureFlow);
+    });
+  }, [featureFlow, lastPath]);
+
+  // Reset the inspector when switching modes (shared canvas also does this on
+  // flowGraph change, but recompose has no flowGraph to key off).
+  useEffect(() => setSelection(null), [viewMode]);
+
+  // Inspector "删除此边" routes through the same edge transition table.
+  const handleRecomposeDeleteEdge = useCallback(
+    (edgeId: string) => {
+      setRecomposeDesign((d) => {
+        if (!d || !graph) return d;
+        const aggregated = computeAggregatedModuleEdges(graph, d);
+        const keys = new Set(aggregated.map((e) => edgeKey(e.source, e.target)));
+        return recomposeOnDeleteEdge(d, edgeId, keys);
+      });
+    },
+    [graph],
+  );
+
   const handleSubmit = useCallback(
     (path: string) => {
       setLastPath(path);
+      // A different path gets a fresh design (loaded from ITS storage key on
+      // scan settle); a same-path rescan keeps the in-memory design (#6).
+      if (path !== lastPath) setRecomposeDesign(null);
       void start(path);
       setGraph(null);
     },
-    [start],
+    [lastPath, start],
   );
 
   // Rescan from the last submitted path (fixes inert "重新扫描" button).
@@ -218,7 +276,7 @@ export default function App() {
           模块地图
         </h1>
         <div style={{ display: 'flex', gap: 4 }} role="group" aria-label="视图切换">
-          {(['feature', 'real'] as const).map((mode) => (
+          {(['feature', 'real', 'recompose'] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
@@ -228,7 +286,7 @@ export default function App() {
               }}
               aria-pressed={viewMode === mode}
             >
-              {mode === 'feature' ? '功能视图' : '现实视图'}
+              {mode === 'feature' ? '功能视图' : mode === 'real' ? '现实视图' : '重组视图'}
             </button>
           ))}
         </div>
@@ -241,91 +299,109 @@ export default function App() {
       </header>
 
       <main style={{ flex: 1, position: 'relative' }}>
-        {!flowGraph && !empty && !scanFailed && !featureEmpty && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--text-2, #94a3b8)',
-            }}
-          >
-            输入代码目录路径并点击「扫描」，等待完成后渲染模块图
-          </div>
-        )}
+        {viewMode === 'recompose' ? (
+          <RecomposeCanvas
+            design={recomposeDesign}
+            graph={graph}
+            featureFlow={featureFlow}
+            onDesignChange={setRecomposeDesign}
+            path={lastPath}
+            selection={selection}
+            onSelect={setSelection}
+          />
+        ) : (
+          <>
+            {!flowGraph && !empty && !scanFailed && !featureEmpty && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--text-2, #94a3b8)',
+                }}
+              >
+                输入代码目录路径并点击「扫描」，等待完成后渲染模块图
+              </div>
+            )}
 
-        {empty && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--mid, #fbbf24)',
-            }}
-          >
-            扫描完成，但未解析到任何模块
-          </div>
-        )}
+            {empty && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--mid, #fbbf24)',
+                }}
+              >
+                扫描完成，但未解析到任何模块
+              </div>
+            )}
 
-        {featureEmpty && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              color: 'var(--text-2, #94a3b8)',
-              textAlign: 'center',
-              padding: '0 24px',
-            }}
-          >
-            <div>该代码库暂无功能清单（feature-atoms.json）</div>
-            <div style={{ fontSize: 12 }}>
-              {unassignedCount} 个文件未分组。可切换到「现实视图」查看文件级结构。
-            </div>
-          </div>
-        )}
+            {featureEmpty && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  color: 'var(--text-2, #94a3b8)',
+                  textAlign: 'center',
+                  padding: '0 24px',
+                }}
+              >
+                <div>该代码库暂无功能清单（feature-atoms.json）</div>
+                <div style={{ fontSize: 12 }}>
+                  {unassignedCount} 个文件未分组。可切换到「现实视图」查看文件级结构。
+                </div>
+              </div>
+            )}
 
-        {flowGraph && !empty && !featureEmpty && (
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            onNodeClick={handleNodeClick}
-            onEdgeClick={handleEdgeClick}
-            fitView
-            proOptions={{ hideAttribution: true }}
-            colorMode="dark"
-          >
-            <Background
-              variant={BackgroundVariant.Dots}
-              gap={24}
-              size={1}
-              color="rgba(148,163,184,0.15)"
-            />
-            <Controls />
-          </ReactFlow>
+            {flowGraph && !empty && !featureEmpty && (
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
+                onNodeClick={handleNodeClick}
+                onEdgeClick={handleEdgeClick}
+                fitView
+                proOptions={{ hideAttribution: true }}
+                colorMode="dark"
+              >
+                <Background
+                  variant={BackgroundVariant.Dots}
+                  gap={24}
+                  size={1}
+                  color="rgba(148,163,184,0.15)"
+                />
+                <Controls />
+              </ReactFlow>
+            )}
+          </>
         )}
 
         {/* Inspector shows on selection, OR when the parser reported
             diagnostics (handoff §5: show diagnostics without a click). */}
-        {flowGraph && (selection !== null || (graph?.diagnostics?.length ?? 0) > 0) && (
-          <Inspector
-            selection={selection}
-            graphDiagnostics={graph?.diagnostics ?? []}
-            onClose={() => setSelection(null)}
-          />
-        )}
+        {(flowGraph || viewMode === 'recompose') &&
+          (selection !== null || (graph?.diagnostics?.length ?? 0) > 0) && (
+            <Inspector
+              selection={selection}
+              graphDiagnostics={graph?.diagnostics ?? []}
+              onClose={() => setSelection(null)}
+              onDeleteEdge={
+                viewMode === 'recompose' ? handleRecomposeDeleteEdge : undefined
+              }
+            />
+          )}
       </main>
     </div>
   );
