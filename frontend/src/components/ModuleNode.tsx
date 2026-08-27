@@ -7,13 +7,15 @@
  * source (right) / target (left) handle pair, matching the prototype
  * (prototype-ui.html renders one in/out dot pair per node).
  */
-import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
+import { Position, type Node, type NodeProps } from '@xyflow/react';
 import type { CSSProperties } from 'react';
 import type { ModuleNodeData } from '../lib/graphToFlow';
 import { scoreColor } from '../lib/depthScore';
+import { NODE_WIDTH } from '../lib/layout';
+import PortHandle from './PortHandle';
 
 const NODE_STYLE: CSSProperties = {
-  width: 160,
+  width: NODE_WIDTH,
   borderRadius: 10,
   border: '2px solid var(--border, #475569)',
   background: 'var(--panel, #1e293b)',
@@ -66,17 +68,8 @@ export default function ModuleNode({ data }: NodeProps<Node<ModuleNodeData>>) {
           {data.score}
         </span>
       </div>
-      <Handle type="target" position={Position.Left} style={handleStyle} />
-      <Handle type="source" position={Position.Right} style={handleStyle} />
+      <PortHandle type="target" position={Position.Left} />
+      <PortHandle type="source" position={Position.Right} />
     </div>
   );
 }
-
-/** 10px circular accent handle with a 2px node-color border (prototype §2.6). */
-const handleStyle: CSSProperties = {
-  width: 10,
-  height: 10,
-  borderRadius: '50%',
-  background: 'var(--accent, #38bdf8)',
-  border: '2px solid var(--bg, #0f172a)',
-};

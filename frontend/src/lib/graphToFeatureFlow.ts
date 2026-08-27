@@ -129,9 +129,9 @@ export function graphToFeatureFlow(graph: Graph): FeatureFlowGraph {
     const tAtom = moduleToAtom.get(e.target);
     return !(sAtom && tAtom && sAtom === tAtom);
   });
-  // Non-developer edge label (C1); raw edges kept in data for drill-down.
+  // Non-developer edge label (C1): the canvas renders `data.displayLabel` = 「依赖」
+  // (LabeledEdge), while `edge.label` keeps the merged kinds for Inspector drill-down.
   const edges = aggregateEdges(atomLevelEdges, resolveEndpoint, {
-    formatLabel: () => '依赖',
     extraData: { displayLabel: '依赖' },
   });
 

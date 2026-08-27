@@ -7,11 +7,12 @@
  * Node width comes from the shared ATOM_NODE_WIDTH constant (C6: same source
  * drives the grid spacing in layout.ts).
  */
-import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
+import { Position, type Node, type NodeProps } from '@xyflow/react';
 import type { CSSProperties } from 'react';
 import type { AtomNodeData } from '../lib/graphToFeatureFlow';
 import { scoreColor } from '../lib/depthScore';
 import { ATOM_NODE_WIDTH } from '../lib/layout';
+import PortHandle from './PortHandle';
 
 const NODE_STYLE: CSSProperties = {
   width: ATOM_NODE_WIDTH,
@@ -58,17 +59,8 @@ export default function FeatureAtomNode({ data }: NodeProps<Node<AtomNodeData>>)
         <span style={badgeStyle}>{data.files.length} 个文件</span>
         <span style={{ ...badgeStyle, color: borderColor }}>{data.score}</span>
       </div>
-      <Handle type="target" position={Position.Left} style={handleStyle} />
-      <Handle type="source" position={Position.Right} style={handleStyle} />
+      <PortHandle type="target" position={Position.Left} />
+      <PortHandle type="source" position={Position.Right} />
     </div>
   );
 }
-
-/** 10px circular accent handle with a 2px node-color border (prototype §2.6). */
-const handleStyle: CSSProperties = {
-  width: 10,
-  height: 10,
-  borderRadius: '50%',
-  background: 'var(--accent, #38bdf8)',
-  border: '2px solid var(--bg, #0f172a)',
-};
