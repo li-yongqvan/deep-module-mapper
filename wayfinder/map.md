@@ -34,11 +34,11 @@ wayfinder: map
 - [build-frontend-real-view](design-doc-issue-7-frontend-real-view.md) — 现实视图前端已完成（PR #9，2026-08-26）：Vite 8.2.2 + React 19.2.8 + `@xyflow/react` 12；路径输入 → 2s 轮询 → React Flow 渲染；红绿灯 naive 评分（`maxLine/portCount`，50/15 暂定）；外部模块灰色虚线节点；同对多边聚合；右侧 Inspector。18 测试全绿 + 真实 fixture 端到端验证。设计文档（合并审计：5 阻断+8 重要+10 次要全部采纳）+ 决策落档均已归档。
 - [module-map-north-star](module-map-north-star.md) — 视图设计北极星：读者是不懂代码的人；节点按「功能」聚合（AI 给出功能原子，最小可拖动单位）；接口数量尽量少 → 依赖简单。工作流 = 视图层先输出结果，人再据此在重组层优化。第一版用手工维护的功能清单顶替 AI 聚合。
 - [feature-view-functional-atoms](handoff-issue-8-feature-view-complete.md) — 功能视图已完成（PR #12，2026-08-27）：扫描 deep-module-mapper 自生图 29 文件节点 → 3 中文节点 / 2 边；functional-atom manifest（`frontend/src/manifest/feature-atoms.json`）；噪音默认隐藏；原子下钻成员文件；功能视图默认 + 顶部切换。设计文档 + 合并审计（有条件通过，W1-W3/I1-I5 已落实）+ code-review（无阻塞）+ 决策落档 D1-D8 均已归档。code-review 发现项已修复并 cherry-pick 进 master（`b2cc611`）：抽共享 PortHandle、NODE_WIDTH 统一、'依赖' 单通道 label、Inspector 下钻渲染测试，35/35 测试全绿。
+- [recomposition-layer](handoff-recomposition-layer.md) — 重组视图已完成（PR #14，2026-08-28）：第三视图「重组视图」，模块容器（React Flow 父节点）+ 功能原子 chip（子节点）；原子拖进/拖出模块，单原子自动成隐式模块；模块间依赖 = 自动聚合 ∪ 手动增删；localStorage 持久化（按库路径分 key）+ 重置回 manifest 建议分组；模块 V1 不嵌套；中文名自动派生 + 双击编辑。实测 99 测试全绿、tsc 0、build 成功；发现并修复 2 个真实逻辑 bug（有回归测试）。共同语言补「功能原子」「模块容器」术语。决策 D1-D8 已落档。
 
 ## Open frontier
 
-- GitHub issue #10: [Recomposition layer: custom canvas with module-content editing](https://github.com/li-yongqvan/deep-module-mapper/issues/10) — 当前 active frontier ticket：用户在画布上把功能原子拖进/拖出模块 + 连依赖。
-- GitHub issue #11: [AI aggregation: local model clusters files into functional atoms](https://github.com/li-yongqvan/deep-module-mapper/issues/11) — 依赖 #8（已关闭）；本地模型读文件内容自动判断功能原子，替代手工清单。
+- GitHub issue #11: [AI aggregation: local model clusters files into functional atoms](https://github.com/li-yongqvan/deep-module-mapper/issues/11) — 当前 active frontier ticket：本地模型读文件内容自动判断功能原子，替代手工 manifest。依赖 #8/#10（均已完成）。本地模型环境：Ollama `my-assistant`（qwen3:8b）@ 127.0.0.1:11434，prompt 纪律弱需精调。
 
 ## Not yet specified
 
