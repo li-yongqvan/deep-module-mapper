@@ -13,17 +13,19 @@ from __future__ import annotations
 
 import json
 import sys
+import uuid
 from pathlib import Path
 from typing import Any, Callable
 
 from parser import scan_codebase
 
-from . import digest, prompt
+from . import digest, prompt, training
 from .compare import compare_to_ground_truth
 from .config import EnvConfig
 from .providers import (
     Provider,
     get_api_provider,
+    get_local_provider,
     retry_with_repair,
 )
 from .report import build_report, write_report
@@ -208,6 +210,7 @@ def run_aggregation(
     warnings: list[str] = []
 
     api = api_provider if api_provider is not None else get_api_provider(config)
+    local = local_provider if local_provider is not None else get_local_provider(config)
 
     # 1. scan — a scan failure is a fatal input error (exit 1), not retryable.
     try:
@@ -269,7 +272,47 @@ def run_aggregation(
         compare_to_ground_truth(authoritative, gt_manifest) if gt_manifest is not None else None
     )
 
-    # 6. write the authoritative manifest (unless dry-run) — only the API
+    # 6. local-model learning (S6, D14/U6) — best-effort, never blocks the
+    #    authoritative path. Runs only on API success (a failed run collects no
+    #    training data). Its answer never writes the manifest (INV4).
+    run_id = uuid.uuid4().hex[:12]
+    local_info: dict | None = None
+    if not skip_local:
+        api_row = (
+            training.api_record(
+                run_id=run_id,
+                repo=repo.name,
+                model=api.name,
+                prompt_text=prompt.build_user_prompt(api_digest.text),
+                raw_output=api_result.text or "",
+                parsed=authoritative.model_dump(),
+                ok=True,
+            )
+            if training_log is not None
+            else None
+        )
+        local_result = training.run_local_learning(
+            repo=repo.name,
+            graph=graph,
+            module_ids=module_ids,
+            local=local,
+            api_raw=api_result.text or "",
+            run_id=run_id,
+            training_log=training_log,
+            sidecar=output_path.parent / "feature-atoms.local.json",
+            dry_run=dry_run,
+            api_record_row=api_row,
+        )
+        warnings.extend(local_result.warnings)
+        local_info = {
+            "ok": local_result.ok,
+            "attempts": local_result.local_attempts,
+            "error": local_result.local_error,
+            "sidecar": local_result.sidecar_path,
+            "learn": local_result.learn_ok,
+        }
+
+    # 7. write the authoritative manifest (unless dry-run) — only the API
     #    result ever lands here (INV4: the local model never writes it).
     written = False
     if not dry_run:
@@ -279,7 +322,7 @@ def run_aggregation(
             raise FatalError(f"无法写入 manifest: {exc}") from exc
         written = True
 
-    # 7. report (status=ok).
+    # 8. report (status=ok).
     report_dict = build_report(
         status="ok",
         repo=_repo_dict(repo, module_ids),
@@ -287,7 +330,7 @@ def run_aggregation(
             authoritative, written=written, path=output_path, coverage=validation.coverage
         ),
         quality=_quality_dict(comparison, gt_source) if comparison else None,
-        providers={"api": api_info, "local": None},
+        providers={"api": api_info, "local": local_info},
         warnings=warnings,
     )
     if not dry_run:

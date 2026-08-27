@@ -50,7 +50,9 @@ def test_happy_path_writes_manifest_and_report_with_quality(tmp_path):
     gt = tmp_path / "gt.json"
     gt.write_text(json.dumps(VALID_MANIFEST, ensure_ascii=False), encoding="utf-8")
 
-    code = run_aggregation(tmp_path, cfg, api_provider=FakeProvider(_ok()), output=out, compare=gt)
+    code = run_aggregation(
+        tmp_path, cfg, api_provider=FakeProvider(_ok()), output=out, compare=gt, skip_local=True
+    )
 
     assert code == EXIT_OK
     assert json.loads(out.read_text(encoding="utf-8")) == VALID_MANIFEST
@@ -85,7 +87,9 @@ def test_happy_path_writes_manifest_and_report_with_quality(tmp_path):
 def test_default_output_lives_under_repo(tmp_path):
     _write_repo(tmp_path)
 
-    code = run_aggregation(tmp_path, EnvConfig(llm_api_key="sk-test"), api_provider=FakeProvider(_ok()))
+    code = run_aggregation(
+        tmp_path, EnvConfig(llm_api_key="sk-test"), api_provider=FakeProvider(_ok()), skip_local=True
+    )
 
     assert code == EXIT_OK
     assert (tmp_path / "frontend/src/manifest/feature-atoms.json").exists()
@@ -97,7 +101,12 @@ def test_default_ground_truth_is_existing_output(tmp_path):
     default.parent.mkdir(parents=True)
     default.write_text(json.dumps(VALID_MANIFEST, ensure_ascii=False), encoding="utf-8")
 
-    code = run_aggregation(tmp_path, EnvConfig(llm_api_key="sk-test"), api_provider=FakeProvider(_ok()))
+    code = run_aggregation(
+        tmp_path,
+        EnvConfig(llm_api_key="sk-test"),
+        api_provider=FakeProvider(_ok()),
+        skip_local=True,
+    )
 
     assert code == EXIT_OK
     report = json.loads(
@@ -115,6 +124,7 @@ def test_dry_run_prints_and_writes_nothing(tmp_path, capsys):
         EnvConfig(llm_api_key="sk-test"),
         api_provider=FakeProvider(_ok()),
         dry_run=True,
+        skip_local=True,
     )
 
     assert code == EXIT_OK
@@ -133,6 +143,7 @@ def test_missing_ground_truth_warns_but_succeeds(tmp_path):
         api_provider=FakeProvider(_ok()),
         output=out,
         compare=tmp_path / "no-such-gt.json",
+        skip_local=True,
     )
 
     assert code == EXIT_OK

@@ -51,6 +51,7 @@ def test_api_failure_writes_failed_report_and_leaves_scaffold_untouched(tmp_path
             api_provider=FakeProvider(
                 ProviderResult(text=None, ok=False, error="http 500: boom", retryable=False)
             ),
+            skip_local=True,
         )
 
     assert "http 500" in str(excinfo.value)
@@ -77,6 +78,7 @@ def test_failure_writes_no_manifest_even_with_explicit_output(tmp_path):
                 ProviderResult(text=None, ok=False, error="http 400: bad request", retryable=False)
             ),
             output=out,
+            skip_local=True,
         )
 
     assert not out.exists()  # INV5: no manifest written on any AI failure

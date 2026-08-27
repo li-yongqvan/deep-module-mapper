@@ -53,7 +53,11 @@ def test_invalid_json_is_repaired_then_succeeds(tmp_path):
     out = tmp_path / "m.json"
 
     code = run_aggregation(
-        tmp_path, EnvConfig(llm_api_key="sk-test"), api_provider=provider, output=out
+        tmp_path,
+        EnvConfig(llm_api_key="sk-test"),
+        api_provider=provider,
+        output=out,
+        skip_local=True,
     )
 
     assert code == EXIT_OK
@@ -75,7 +79,11 @@ def test_missing_coverage_is_repaired_then_succeeds(tmp_path):
     out = tmp_path / "m.json"
 
     code = run_aggregation(
-        tmp_path, EnvConfig(llm_api_key="sk-test"), api_provider=provider, output=out
+        tmp_path,
+        EnvConfig(llm_api_key="sk-test"),
+        api_provider=provider,
+        output=out,
+        skip_local=True,
     )
 
     assert code == EXIT_OK
@@ -93,7 +101,11 @@ def test_output_still_invalid_after_repair_is_a_failure(tmp_path):
 
     with pytest.raises(AggregationFailed) as excinfo:
         run_aggregation(
-            tmp_path, EnvConfig(llm_api_key="sk-test"), api_provider=provider, output=out
+            tmp_path,
+            EnvConfig(llm_api_key="sk-test"),
+            api_provider=provider,
+            output=out,
+            skip_local=True,
         )
 
     assert "仍无效" in str(excinfo.value)
