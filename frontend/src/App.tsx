@@ -1,8 +1,14 @@
 /**
- * Real-view page: scan form + status banner on top, React Flow canvas below,
- * right-side inspector (M8). Dark theme matches prototype-ui.html palette.
+ * Deep Module Mapper page: scan form + status banner on top, view toggle,
+ * React Flow canvas below, right-side inspector (M8). Dark theme matches
+ * prototype-ui.html palette.
+ *
+ * Two views (issue #8 D1): the **feature view** (default) aggregates files
+ * into functional atoms (Chinese name + one-line description, noise hidden);
+ * the **real view** shows the file-level module graph (#7). Switching views
+ * resets the inspector selection (audit S3 / I1).
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
   ReactFlow,
   Background,
@@ -10,6 +16,7 @@ import {
   Controls,
   useNodesState,
   useEdgesState,
+  type Node,
   type NodeMouseHandler,
   type EdgeMouseHandler,
   type Edge as FlowEdge,
@@ -17,51 +24,78 @@ import {
 import '@xyflow/react/dist/style.css';
 
 import type { Graph, Module } from './api/types';
+import type { ExternalNodeData, ModuleNodeData } from './lib/graphToFlow';
+import type { AtomNodeData, FeatureFlowGraph } from './lib/graphToFeatureFlow';
+import { graphToFeatureFlow } from './lib/graphToFeatureFlow';
+import { atomForFile } from './manifest/featureAtoms';
 import { useScanJob } from './hooks/useScanJob';
-import { graphToFlow, type AggregatedEdgeData, type FlowNode } from './lib/graphToFlow';
-import { gridPositions } from './lib/layout';
+import { graphToFlow, type AggregatedEdgeData } from './lib/graphToFlow';
+import { gridPositions, NODE_WIDTH, ATOM_NODE_WIDTH } from './lib/layout';
 import ModuleNode from './components/ModuleNode';
 import ExternalNode from './components/ExternalNode';
+import FeatureAtomNode from './components/FeatureAtomNode';
 import LabeledEdge from './components/LabeledEdge';
 import ScanForm from './components/ScanForm';
 import ScanStatus from './components/ScanStatus';
 import Inspector, {
   type Selection,
-  type NodeSelection,
+  type ModuleNodeSelection,
+  type AtomNodeSelection,
+  type ExternalNodeSelection,
   type EdgeSelection,
 } from './components/Inspector';
 
+type ViewMode = 'feature' | 'real';
+
+/** Union of every node type either view can render. */
+type AppFlowNode = Node<ModuleNodeData | ExternalNodeData | AtomNodeData>;
+
 // Custom node/edge types must be stable across renders (React Flow requirement).
-const nodeTypes = { moduleNode: ModuleNode, externalNode: ExternalNode };
+const nodeTypes = {
+  moduleNode: ModuleNode,
+  externalNode: ExternalNode,
+  atomNode: FeatureAtomNode,
+};
 const edgeTypes = { labeledEdge: LabeledEdge };
 
 export default function App() {
   const { state, start, cancel } = useScanJob();
   const [selection, setSelection] = useState<Selection | null>(null);
   const [graph, setGraph] = useState<Graph | null>(null);
+  // Feature view (atoms) is the default; real view keeps the file-level map.
+  const [viewMode, setViewMode] = useState<ViewMode>('feature');
   // Last submitted path, so the rescan button can re-run the same scan.
   const [lastPath, setLastPath] = useState('');
 
-  const flowGraph = useMemo(() => (graph ? graphToFlow(graph) : null), [graph]);
+  const flowGraph = useMemo(
+    () =>
+      graph
+        ? viewMode === 'feature'
+          ? graphToFeatureFlow(graph)
+          : graphToFlow(graph)
+        : null,
+    [graph, viewMode],
+  );
 
-  // Rehydrate React Flow node positions on every new graph.
-  const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([]);
+  // Rehydrate React Flow node positions on every new graph or view switch.
+  const [nodes, setNodes, onNodesChange] = useNodesState<AppFlowNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<
     FlowEdge<AggregatedEdgeData>
   >([]);
 
   useEffect(() => {
     if (!flowGraph) return;
-    const positions = gridPositions(flowGraph.nodes.map((n) => n.id));
+    const nodeWidth = viewMode === 'feature' ? ATOM_NODE_WIDTH : NODE_WIDTH;
+    const positions = gridPositions(flowGraph.nodes.map((n) => n.id), nodeWidth);
     setNodes(
       flowGraph.nodes.map((n) => ({
         ...n,
         position: positions.get(n.id) ?? n.position,
-      })),
+      })) as AppFlowNode[],
     );
     setEdges(flowGraph.edges);
-    setSelection(null); // reset inspector on a fresh graph
-  }, [flowGraph, setNodes, setEdges]);
+    setSelection(null); // reset inspector on a fresh graph OR view switch
+  }, [flowGraph, viewMode, setNodes, setEdges]);
 
   // Lift the finished graph out of the scan state.
   useEffect(() => {
@@ -89,16 +123,37 @@ export default function App() {
     }
   }, [lastPath, start]);
 
-  const handleNodeClick: NodeMouseHandler<FlowNode> = useCallback(
+  const handleNodeClick: NodeMouseHandler<AppFlowNode> = useCallback(
     (_, node) => {
       const data = node.data;
       if (data.kind === 'external') {
+        const extData = data as ExternalNodeData & { externalNames?: string[] };
         setSelection({
           type: 'node',
           kind: 'external',
           id: node.id,
-          label: data.label,
-        } satisfies NodeSelection);
+          label: extData.label,
+          externalNames: extData.externalNames ?? [],
+        } satisfies ExternalNodeSelection);
+        return;
+      }
+      if (data.kind === 'atom') {
+        // Drill-down: the files that make up this atom, with their ports.
+        const members =
+          graph?.modules.filter((m) => atomForFile(m.id)?.id === data.atomId) ??
+          [];
+        setSelection({
+          type: 'node',
+          kind: 'atom',
+          id: node.id,
+          label: data.name,
+          name: data.name,
+          description: data.description,
+          files: data.files,
+          modules: members,
+          score: data.score,
+          portCount: data.portCount,
+        } satisfies AtomNodeSelection);
         return;
       }
       const module: Module | undefined = graph?.modules.find(
@@ -112,7 +167,7 @@ export default function App() {
         module,
         score: data.score,
         diagnostics: data.diagnostics,
-      } satisfies NodeSelection);
+      } satisfies ModuleNodeSelection);
     },
     [graph],
   );
@@ -129,6 +184,15 @@ export default function App() {
 
   const empty = state.kind === 'empty';
   const scanFailed = state.kind === 'error';
+  // Feature view with zero atoms (e.g. a codebase the manifest doesn't cover):
+  // show a hint instead of an empty canvas (I3). `isEmpty` alone is not enough
+  // — a graph with modules but no manifest match has nodes.length === 0.
+  const featureEmpty =
+    viewMode === 'feature' && flowGraph !== null && flowGraph.nodes.length === 0;
+  const unassignedCount =
+    viewMode === 'feature' && flowGraph
+      ? (flowGraph as FeatureFlowGraph).unassignedCount
+      : 0;
 
   return (
     <div
@@ -153,8 +217,23 @@ export default function App() {
         }}
       >
         <h1 style={{ fontSize: 16, margin: 0, whiteSpace: 'nowrap' }}>
-          现实视图
+          模块地图
         </h1>
+        <div style={{ display: 'flex', gap: 4 }} role="group" aria-label="视图切换">
+          {(['feature', 'real'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode)}
+              style={{
+                ...toggleStyle,
+                ...(viewMode === mode ? toggleActiveStyle : {}),
+              }}
+              aria-pressed={viewMode === mode}
+            >
+              {mode === 'feature' ? '功能视图' : '现实视图'}
+            </button>
+          ))}
+        </div>
         <ScanForm onSubmit={handleSubmit} disabled={state.kind === 'scanning'} />
         <ScanStatus
           state={state}
@@ -164,7 +243,7 @@ export default function App() {
       </header>
 
       <main style={{ flex: 1, position: 'relative' }}>
-        {!flowGraph && !empty && !scanFailed && (
+        {!flowGraph && !empty && !scanFailed && !featureEmpty && (
           <div
             style={{
               position: 'absolute',
@@ -194,7 +273,29 @@ export default function App() {
           </div>
         )}
 
-        {flowGraph && !empty && (
+        {featureEmpty && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              color: 'var(--text-2, #94a3b8)',
+              textAlign: 'center',
+              padding: '0 24px',
+            }}
+          >
+            <div>该代码库暂无功能清单（feature-atoms.json）</div>
+            <div style={{ fontSize: 12 }}>
+              {unassignedCount} 个文件未分组。可切换到「现实视图」查看文件级结构。
+            </div>
+          </div>
+        )}
+
+        {flowGraph && !empty && !featureEmpty && (
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -231,3 +332,19 @@ export default function App() {
     </div>
   );
 }
+
+const toggleStyle: CSSProperties = {
+  padding: '6px 12px',
+  borderRadius: 6,
+  border: '1px solid var(--border, #475569)',
+  background: 'transparent',
+  color: 'var(--text-2, #94a3b8)',
+  fontSize: 12,
+  cursor: 'pointer',
+};
+const toggleActiveStyle: CSSProperties = {
+  background: 'var(--accent, #38bdf8)',
+  borderColor: 'var(--accent, #38bdf8)',
+  color: '#000',
+  fontWeight: 600,
+};

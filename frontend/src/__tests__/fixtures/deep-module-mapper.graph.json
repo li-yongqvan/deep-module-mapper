@@ -1,0 +1,3604 @@
+{
+  "modules": [
+    {
+      "id": "backend/backend/__init__.py",
+      "path": "backend/backend/__init__.py",
+      "ports": []
+    },
+    {
+      "id": "backend/backend/app.py",
+      "path": "backend/backend/app.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "scan_endpoint",
+          "line": 40,
+          "signature": "(request) -> JSONResponse",
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "status_endpoint",
+          "line": 74,
+          "signature": "(request) -> JSONResponse",
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "graph_endpoint",
+          "line": 84,
+          "signature": "(request) -> JSONResponse",
+          "params": [
+            "request"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "backend/backend/models.py",
+      "path": "backend/backend/models.py",
+      "ports": [
+        {
+          "kind": "class",
+          "name": "ScanRequest",
+          "line": 8,
+          "signature": "ScanRequest(BaseModel)",
+          "params": []
+        },
+        {
+          "kind": "class",
+          "name": "ScanResponse",
+          "line": 16,
+          "signature": "ScanResponse(BaseModel)",
+          "params": []
+        },
+        {
+          "kind": "class",
+          "name": "StatusResponse",
+          "line": 20,
+          "signature": "StatusResponse(BaseModel)",
+          "params": []
+        }
+      ]
+    },
+    {
+      "id": "backend/backend/scanner.py",
+      "path": "backend/backend/scanner.py",
+      "ports": []
+    },
+    {
+      "id": "backend/backend/store.py",
+      "path": "backend/backend/store.py",
+      "ports": [
+        {
+          "kind": "class",
+          "name": "Job",
+          "line": 16,
+          "signature": "Job",
+          "params": []
+        },
+        {
+          "kind": "class",
+          "name": "JobStore",
+          "line": 26,
+          "signature": "JobStore",
+          "params": [],
+          "docstring": "Module-scoped in-memory job store with a max-job cap."
+        }
+      ]
+    },
+    {
+      "id": "backend/tests/conftest.py",
+      "path": "backend/tests/conftest.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "mini_pkg",
+          "line": 14,
+          "signature": "() -> Path",
+          "params": [],
+          "docstring": "Return the path to a valid Python fixture package."
+        },
+        {
+          "kind": "function",
+          "name": "broken_pkg",
+          "line": 20,
+          "signature": "() -> Path",
+          "params": [],
+          "docstring": "Return the path to a fixture package containing a syntax error."
+        },
+        {
+          "kind": "function",
+          "name": "client",
+          "line": 26,
+          "signature": "() -> TestClient",
+          "params": [],
+          "docstring": "Return a Starlette TestClient for the backend app."
+        }
+      ]
+    },
+    {
+      "id": "backend/tests/fixtures/broken_pkg/ok.py",
+      "path": "backend/tests/fixtures/broken_pkg/ok.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "ok",
+          "line": 4,
+          "signature": "() -> str",
+          "params": []
+        }
+      ]
+    },
+    {
+      "id": "backend/tests/fixtures/mini_pkg/__init__.py",
+      "path": "backend/tests/fixtures/mini_pkg/__init__.py",
+      "ports": [
+        {
+          "kind": "export",
+          "name": "helper",
+          "line": 5,
+          "signature": "",
+          "params": []
+        }
+      ]
+    },
+    {
+      "id": "backend/tests/fixtures/mini_pkg/lib.py",
+      "path": "backend/tests/fixtures/mini_pkg/lib.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "helper",
+          "line": 4,
+          "signature": "(value) -> int",
+          "params": [
+            "value"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "backend/tests/fixtures/mini_pkg/main.py",
+      "path": "backend/tests/fixtures/mini_pkg/main.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "main",
+          "line": 6,
+          "signature": "() -> int",
+          "params": []
+        }
+      ]
+    },
+    {
+      "id": "backend/tests/test_api.py",
+      "path": "backend/tests/test_api.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "test_scan_happy_path",
+          "line": 26,
+          "signature": "(client, mini_pkg) -> None",
+          "params": [
+            "client",
+            "mini_pkg"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_scan_invalid_path",
+          "line": 43,
+          "signature": "(client) -> None",
+          "params": [
+            "client"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_scan_empty_path",
+          "line": 51,
+          "signature": "(client) -> None",
+          "params": [
+            "client"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_missing_job",
+          "line": 58,
+          "signature": "(client) -> None",
+          "params": [
+            "client"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_scan_parser_error_isolation",
+          "line": 69,
+          "signature": "(client, broken_pkg) -> None",
+          "params": [
+            "client",
+            "broken_pkg"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "parser/__init__.py",
+      "path": "parser/__init__.py",
+      "ports": [
+        {
+          "kind": "export",
+          "name": "scan_codebase",
+          "line": 8,
+          "signature": "",
+          "params": []
+        }
+      ]
+    },
+    {
+      "id": "parser/__main__.py",
+      "path": "parser/__main__.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "main",
+          "line": 15,
+          "signature": "(argv=None) -> int",
+          "params": [
+            "argv"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "parser/_diagnostics.py",
+      "path": "parser/_diagnostics.py",
+      "ports": [
+        {
+          "kind": "class",
+          "name": "Collector",
+          "line": 10,
+          "signature": "Collector",
+          "params": [],
+          "docstring": "Collects diagnostics during a scan; finalize() dedups and sorts."
+        },
+        {
+          "kind": "function",
+          "name": "collect_dynamic_imports",
+          "line": 35,
+          "signature": "(tree, module_id, collector) -> None",
+          "params": [
+            "tree",
+            "module_id",
+            "collector"
+          ],
+          "docstring": "Detect ``__import__`` and ``importlib.import_module`` calls (D19/Q5)."
+        }
+      ]
+    },
+    {
+      "id": "parser/_edges.py",
+      "path": "parser/_edges.py",
+      "ports": [
+        {
+          "kind": "class",
+          "name": "RawImport",
+          "line": 25,
+          "signature": "RawImport",
+          "params": []
+        },
+        {
+          "kind": "class",
+          "name": "RawReference",
+          "line": 35,
+          "signature": "RawReference",
+          "params": []
+        },
+        {
+          "kind": "class",
+          "name": "Resolution",
+          "line": 43,
+          "signature": "Resolution",
+          "params": [],
+          "docstring": "Outcome of resolving one import/reference against the index."
+        },
+        {
+          "kind": "function",
+          "name": "collect_imports",
+          "line": 54,
+          "signature": "(tree) -> list",
+          "params": [
+            "tree"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "collect_references",
+          "line": 68,
+          "signature": "(tree) -> list",
+          "params": [
+            "tree"
+          ],
+          "docstring": "Collect call / inheritance / annotation / decorator references."
+        },
+        {
+          "kind": "function",
+          "name": "collect_local_names",
+          "line": 134,
+          "signature": "(tree) -> frozenset",
+          "params": [
+            "tree"
+          ],
+          "docstring": "All names bound inside any function body (params, assignments, loop vars)."
+        },
+        {
+          "kind": "function",
+          "name": "collect_module_defs",
+          "line": 150,
+          "signature": "(tree) -> frozenset",
+          "params": [
+            "tree"
+          ],
+          "docstring": "Module-level defined names (functions, classes, assignments)."
+        },
+        {
+          "kind": "function",
+          "name": "build_symbol_table",
+          "line": 186,
+          "signature": "(imports, module_index, dir_dotted) -> dict",
+          "params": [
+            "imports",
+            "module_index",
+            "dir_dotted"
+          ],
+          "docstring": "Map bound names to module/symbol entries."
+        },
+        {
+          "kind": "function",
+          "name": "resolve_import",
+          "line": 225,
+          "signature": "(imp, module_index, source_id, dir_dotted, module_ports) -> Resolution",
+          "params": [
+            "imp",
+            "module_index",
+            "source_id",
+            "dir_dotted",
+            "module_ports"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "resolve_reference",
+          "line": 281,
+          "signature": "(ref, symbol_table, module_index, source_id, module_defs, locals_, module_ports) -> Resolution",
+          "params": [
+            "ref",
+            "symbol_table",
+            "module_index",
+            "source_id",
+            "module_defs",
+            "locals_",
+            "module_ports"
+          ],
+          "docstring": "Resolve a call/inheritance/annotation/decorator reference (F3/F4)."
+        }
+      ]
+    },
+    {
+      "id": "parser/_external.py",
+      "path": "parser/_external.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "is_stdlib",
+          "line": 20,
+          "signature": "(name) -> bool",
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "build_module_index",
+          "line": 24,
+          "signature": "(files, root) -> dict",
+          "params": [
+            "files",
+            "root"
+          ],
+          "docstring": "Map dotted module name -> module id (relative path, posix separators)."
+        },
+        {
+          "kind": "function",
+          "name": "classify",
+          "line": 42,
+          "signature": "(name, index) -> tuple",
+          "params": [
+            "name",
+            "index"
+          ],
+          "docstring": "Return ``(kind, module_id)`` where kind is local | stdlib | third_party."
+        }
+      ]
+    },
+    {
+      "id": "parser/_ports.py",
+      "path": "parser/_ports.py",
+      "ports": [
+        {
+          "kind": "class",
+          "name": "ExtractedPorts",
+          "line": 16,
+          "signature": "ExtractedPorts",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "extract_ports",
+          "line": 105,
+          "signature": "(tree) -> ExtractedPorts",
+          "params": [
+            "tree"
+          ],
+          "docstring": "Extract public ports from a parsed module (top-level statements only)."
+        }
+      ]
+    },
+    {
+      "id": "parser/_scanner.py",
+      "path": "parser/_scanner.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "scan_codebase",
+          "line": 18,
+          "signature": "(root_path) -> dict",
+          "params": [
+            "root_path"
+          ],
+          "docstring": "Return a Graph dict matching the schema from issue #2 (5 top-level keys)."
+        }
+      ]
+    },
+    {
+      "id": "parser/_schema.py",
+      "path": "parser/_schema.py",
+      "ports": [
+        {
+          "kind": "class",
+          "name": "Port",
+          "line": 13,
+          "signature": "Port",
+          "params": [],
+          "docstring": "A module's public connection surface: a function, class or export."
+        },
+        {
+          "kind": "class",
+          "name": "Module",
+          "line": 31,
+          "signature": "Module",
+          "params": [],
+          "docstring": "One ``.py`` file = one module (D1)."
+        },
+        {
+          "kind": "class",
+          "name": "Edge",
+          "line": 47,
+          "signature": "Edge",
+          "params": [],
+          "docstring": "A dependency edge between two modules."
+        },
+        {
+          "kind": "class",
+          "name": "ExternalModule",
+          "line": 69,
+          "signature": "ExternalModule",
+          "params": [],
+          "docstring": "A third-party package that the codebase depends on."
+        },
+        {
+          "kind": "class",
+          "name": "Diagnostic",
+          "line": 81,
+          "signature": "Diagnostic",
+          "params": [],
+          "docstring": "A parser note: dynamic import, unresolved symbol or parse error."
+        },
+        {
+          "kind": "class",
+          "name": "Graph",
+          "line": 94,
+          "signature": "Graph",
+          "params": [],
+          "docstring": "The full scan result."
+        }
+      ]
+    },
+    {
+      "id": "parser/tests/conftest.py",
+      "path": "parser/tests/conftest.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "fixtures_dir",
+          "line": 11,
+          "signature": "() -> Path",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "sample_pkg",
+          "line": 16,
+          "signature": "() -> Path",
+          "params": []
+        }
+      ]
+    },
+    {
+      "id": "parser/tests/fixtures/sample_pkg/__init__.py",
+      "path": "parser/tests/fixtures/sample_pkg/__init__.py",
+      "ports": [
+        {
+          "kind": "export",
+          "name": "save_user",
+          "line": 7,
+          "signature": "",
+          "params": []
+        },
+        {
+          "kind": "export",
+          "name": "User",
+          "line": 7,
+          "signature": "",
+          "params": []
+        },
+        {
+          "kind": "export",
+          "name": "SOME_CONSTANT",
+          "line": 7,
+          "signature": "",
+          "params": []
+        }
+      ]
+    },
+    {
+      "id": "parser/tests/fixtures/sample_pkg/core.py",
+      "path": "parser/tests/fixtures/sample_pkg/core.py",
+      "ports": [
+        {
+          "kind": "class",
+          "name": "User",
+          "line": 4,
+          "signature": "User",
+          "params": [],
+          "docstring": "A user account."
+        },
+        {
+          "kind": "function",
+          "name": "save_user",
+          "line": 15,
+          "signature": "(name, email, *, active=True) -> User",
+          "params": [
+            "name",
+            "email",
+            "active"
+          ],
+          "docstring": "Persist a user to the database."
+        },
+        {
+          "kind": "function",
+          "name": "no_return_annotation",
+          "line": 28,
+          "signature": "(x)",
+          "params": [
+            "x"
+          ],
+          "docstring": "Function without a return annotation (F2 regression)."
+        }
+      ]
+    },
+    {
+      "id": "parser/tests/fixtures/sample_pkg/main.py",
+      "path": "parser/tests/fixtures/sample_pkg/main.py",
+      "ports": [
+        {
+          "kind": "class",
+          "name": "Admin",
+          "line": 10,
+          "signature": "Admin(User)",
+          "params": [],
+          "docstring": "An admin user."
+        },
+        {
+          "kind": "class",
+          "name": "Decorated",
+          "line": 18,
+          "signature": "Decorated",
+          "params": [],
+          "docstring": "A class decorated with a foreign attribute."
+        },
+        {
+          "kind": "function",
+          "name": "main",
+          "line": 22,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "annotate",
+          "line": 32,
+          "signature": "(u) -> User",
+          "params": [
+            "u"
+          ],
+          "docstring": "Annotate with an imported type."
+        },
+        {
+          "kind": "function",
+          "name": "dynamic_load",
+          "line": 37,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "undefined_call",
+          "line": 42,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "attribute_undefined",
+          "line": 46,
+          "signature": "()",
+          "params": []
+        }
+      ]
+    },
+    {
+      "id": "parser/tests/fixtures/sample_pkg/utils.py",
+      "path": "parser/tests/fixtures/sample_pkg/utils.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "format_name",
+          "line": 6,
+          "signature": "(name) -> str",
+          "params": [
+            "name"
+          ],
+          "docstring": "Format a name for display."
+        },
+        {
+          "kind": "class",
+          "name": "Formatter",
+          "line": 15,
+          "signature": "Formatter",
+          "params": [],
+          "docstring": "Formats things."
+        },
+        {
+          "kind": "function",
+          "name": "use_builtins",
+          "line": 23,
+          "signature": "(items)",
+          "params": [
+            "items"
+          ],
+          "docstring": "Call builtins; these must not become unresolved symbols (F3)."
+        },
+        {
+          "kind": "function",
+          "name": "use_submodule",
+          "line": 28,
+          "signature": "()",
+          "params": [],
+          "docstring": "Call into the core submodule imported via `from sample_pkg import core`."
+        }
+      ]
+    },
+    {
+      "id": "parser/tests/test_diagnostics.py",
+      "path": "parser/tests/test_diagnostics.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "test_dynamic_import_detected_non_literal",
+          "line": 16,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_dynamic_import_literal_message",
+          "line": 25,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_dedup_by_kind_module_line",
+          "line": 33,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_sort_by_module_then_line",
+          "line": 42,
+          "signature": "()",
+          "params": []
+        }
+      ]
+    },
+    {
+      "id": "parser/tests/test_edges.py",
+      "path": "parser/tests/test_edges.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "test_collect_imports_from_main",
+          "line": 28,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_from_import_submodule_binding_f17",
+          "line": 38,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_relative_import_base_same_for_init_and_module",
+          "line": 44,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_collect_references_kinds",
+          "line": 50,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_local_names_collected",
+          "line": 56,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_module_defs_collected",
+          "line": 62,
+          "signature": "()",
+          "params": []
+        }
+      ]
+    },
+    {
+      "id": "parser/tests/test_external.py",
+      "path": "parser/tests/test_external.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "test_is_stdlib",
+          "line": 8,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_classify_local",
+          "line": 14,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_classify_third_party",
+          "line": 23,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_classify_stdlib",
+          "line": 28,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_module_index_maps_package_and_file",
+          "line": 33,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_excluded_dirs_are_stable",
+          "line": 47,
+          "signature": "()",
+          "params": []
+        }
+      ]
+    },
+    {
+      "id": "parser/tests/test_ports.py",
+      "path": "parser/tests/test_ports.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "test_core_ports_are_public_only",
+          "line": 16,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_no_return_annotation_does_not_crash",
+          "line": 23,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_save_user_signature_and_params",
+          "line": 29,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_class_port_docstring_first_sentence",
+          "line": 37,
+          "signature": "()",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_all_exports",
+          "line": 43,
+          "signature": "()",
+          "params": []
+        }
+      ]
+    },
+    {
+      "id": "parser/tests/test_scan_codebase.py",
+      "path": "parser/tests/test_scan_codebase.py",
+      "ports": [
+        {
+          "kind": "function",
+          "name": "graph",
+          "line": 14,
+          "signature": "() -> dict",
+          "params": []
+        },
+        {
+          "kind": "function",
+          "name": "test_five_top_level_keys",
+          "line": 21,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_serializable",
+          "line": 25,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_modules_exclude_venv",
+          "line": 32,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_broken_syntax_not_a_module",
+          "line": 38,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_core_ports_present",
+          "line": 45,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_flat_ports_carry_module_id",
+          "line": 55,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_init_all_exports",
+          "line": 60,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_call_edge_to_core",
+          "line": 70,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_inheritance_edge",
+          "line": 78,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_decorator_edge",
+          "line": 88,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_annotation_edge",
+          "line": 98,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_import_and_from_import_edges",
+          "line": 108,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_attribute_call_to_external",
+          "line": 115,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_utils_submodule_attribute_edge",
+          "line": 123,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_external_modules",
+          "line": 137,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_dynamic_import_diagnostic",
+          "line": 143,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_unresolved_symbol_diagnostics",
+          "line": 149,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "test_no_builtin_diagnostics",
+          "line": 156,
+          "signature": "(graph)",
+          "params": [
+            "graph"
+          ]
+        }
+      ]
+    }
+  ],
+  "ports": [
+    {
+      "kind": "function",
+      "name": "scan_endpoint",
+      "line": 40,
+      "signature": "(request) -> JSONResponse",
+      "params": [
+        "request"
+      ],
+      "moduleId": "backend/backend/app.py"
+    },
+    {
+      "kind": "function",
+      "name": "status_endpoint",
+      "line": 74,
+      "signature": "(request) -> JSONResponse",
+      "params": [
+        "request"
+      ],
+      "moduleId": "backend/backend/app.py"
+    },
+    {
+      "kind": "function",
+      "name": "graph_endpoint",
+      "line": 84,
+      "signature": "(request) -> JSONResponse",
+      "params": [
+        "request"
+      ],
+      "moduleId": "backend/backend/app.py"
+    },
+    {
+      "kind": "class",
+      "name": "ScanRequest",
+      "line": 8,
+      "signature": "ScanRequest(BaseModel)",
+      "params": [],
+      "moduleId": "backend/backend/models.py"
+    },
+    {
+      "kind": "class",
+      "name": "ScanResponse",
+      "line": 16,
+      "signature": "ScanResponse(BaseModel)",
+      "params": [],
+      "moduleId": "backend/backend/models.py"
+    },
+    {
+      "kind": "class",
+      "name": "StatusResponse",
+      "line": 20,
+      "signature": "StatusResponse(BaseModel)",
+      "params": [],
+      "moduleId": "backend/backend/models.py"
+    },
+    {
+      "kind": "class",
+      "name": "Job",
+      "line": 16,
+      "signature": "Job",
+      "params": [],
+      "moduleId": "backend/backend/store.py"
+    },
+    {
+      "kind": "class",
+      "name": "JobStore",
+      "line": 26,
+      "signature": "JobStore",
+      "params": [],
+      "docstring": "Module-scoped in-memory job store with a max-job cap.",
+      "moduleId": "backend/backend/store.py"
+    },
+    {
+      "kind": "function",
+      "name": "mini_pkg",
+      "line": 14,
+      "signature": "() -> Path",
+      "params": [],
+      "docstring": "Return the path to a valid Python fixture package.",
+      "moduleId": "backend/tests/conftest.py"
+    },
+    {
+      "kind": "function",
+      "name": "broken_pkg",
+      "line": 20,
+      "signature": "() -> Path",
+      "params": [],
+      "docstring": "Return the path to a fixture package containing a syntax error.",
+      "moduleId": "backend/tests/conftest.py"
+    },
+    {
+      "kind": "function",
+      "name": "client",
+      "line": 26,
+      "signature": "() -> TestClient",
+      "params": [],
+      "docstring": "Return a Starlette TestClient for the backend app.",
+      "moduleId": "backend/tests/conftest.py"
+    },
+    {
+      "kind": "function",
+      "name": "ok",
+      "line": 4,
+      "signature": "() -> str",
+      "params": [],
+      "moduleId": "backend/tests/fixtures/broken_pkg/ok.py"
+    },
+    {
+      "kind": "export",
+      "name": "helper",
+      "line": 5,
+      "signature": "",
+      "params": [],
+      "moduleId": "backend/tests/fixtures/mini_pkg/__init__.py"
+    },
+    {
+      "kind": "function",
+      "name": "helper",
+      "line": 4,
+      "signature": "(value) -> int",
+      "params": [
+        "value"
+      ],
+      "moduleId": "backend/tests/fixtures/mini_pkg/lib.py"
+    },
+    {
+      "kind": "function",
+      "name": "main",
+      "line": 6,
+      "signature": "() -> int",
+      "params": [],
+      "moduleId": "backend/tests/fixtures/mini_pkg/main.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_scan_happy_path",
+      "line": 26,
+      "signature": "(client, mini_pkg) -> None",
+      "params": [
+        "client",
+        "mini_pkg"
+      ],
+      "moduleId": "backend/tests/test_api.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_scan_invalid_path",
+      "line": 43,
+      "signature": "(client) -> None",
+      "params": [
+        "client"
+      ],
+      "moduleId": "backend/tests/test_api.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_scan_empty_path",
+      "line": 51,
+      "signature": "(client) -> None",
+      "params": [
+        "client"
+      ],
+      "moduleId": "backend/tests/test_api.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_missing_job",
+      "line": 58,
+      "signature": "(client) -> None",
+      "params": [
+        "client"
+      ],
+      "moduleId": "backend/tests/test_api.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_scan_parser_error_isolation",
+      "line": 69,
+      "signature": "(client, broken_pkg) -> None",
+      "params": [
+        "client",
+        "broken_pkg"
+      ],
+      "moduleId": "backend/tests/test_api.py"
+    },
+    {
+      "kind": "export",
+      "name": "scan_codebase",
+      "line": 8,
+      "signature": "",
+      "params": [],
+      "moduleId": "parser/__init__.py"
+    },
+    {
+      "kind": "function",
+      "name": "main",
+      "line": 15,
+      "signature": "(argv=None) -> int",
+      "params": [
+        "argv"
+      ],
+      "moduleId": "parser/__main__.py"
+    },
+    {
+      "kind": "class",
+      "name": "Collector",
+      "line": 10,
+      "signature": "Collector",
+      "params": [],
+      "docstring": "Collects diagnostics during a scan; finalize() dedups and sorts.",
+      "moduleId": "parser/_diagnostics.py"
+    },
+    {
+      "kind": "function",
+      "name": "collect_dynamic_imports",
+      "line": 35,
+      "signature": "(tree, module_id, collector) -> None",
+      "params": [
+        "tree",
+        "module_id",
+        "collector"
+      ],
+      "docstring": "Detect ``__import__`` and ``importlib.import_module`` calls (D19/Q5).",
+      "moduleId": "parser/_diagnostics.py"
+    },
+    {
+      "kind": "class",
+      "name": "RawImport",
+      "line": 25,
+      "signature": "RawImport",
+      "params": [],
+      "moduleId": "parser/_edges.py"
+    },
+    {
+      "kind": "class",
+      "name": "RawReference",
+      "line": 35,
+      "signature": "RawReference",
+      "params": [],
+      "moduleId": "parser/_edges.py"
+    },
+    {
+      "kind": "class",
+      "name": "Resolution",
+      "line": 43,
+      "signature": "Resolution",
+      "params": [],
+      "docstring": "Outcome of resolving one import/reference against the index.",
+      "moduleId": "parser/_edges.py"
+    },
+    {
+      "kind": "function",
+      "name": "collect_imports",
+      "line": 54,
+      "signature": "(tree) -> list",
+      "params": [
+        "tree"
+      ],
+      "moduleId": "parser/_edges.py"
+    },
+    {
+      "kind": "function",
+      "name": "collect_references",
+      "line": 68,
+      "signature": "(tree) -> list",
+      "params": [
+        "tree"
+      ],
+      "docstring": "Collect call / inheritance / annotation / decorator references.",
+      "moduleId": "parser/_edges.py"
+    },
+    {
+      "kind": "function",
+      "name": "collect_local_names",
+      "line": 134,
+      "signature": "(tree) -> frozenset",
+      "params": [
+        "tree"
+      ],
+      "docstring": "All names bound inside any function body (params, assignments, loop vars).",
+      "moduleId": "parser/_edges.py"
+    },
+    {
+      "kind": "function",
+      "name": "collect_module_defs",
+      "line": 150,
+      "signature": "(tree) -> frozenset",
+      "params": [
+        "tree"
+      ],
+      "docstring": "Module-level defined names (functions, classes, assignments).",
+      "moduleId": "parser/_edges.py"
+    },
+    {
+      "kind": "function",
+      "name": "build_symbol_table",
+      "line": 186,
+      "signature": "(imports, module_index, dir_dotted) -> dict",
+      "params": [
+        "imports",
+        "module_index",
+        "dir_dotted"
+      ],
+      "docstring": "Map bound names to module/symbol entries.",
+      "moduleId": "parser/_edges.py"
+    },
+    {
+      "kind": "function",
+      "name": "resolve_import",
+      "line": 225,
+      "signature": "(imp, module_index, source_id, dir_dotted, module_ports) -> Resolution",
+      "params": [
+        "imp",
+        "module_index",
+        "source_id",
+        "dir_dotted",
+        "module_ports"
+      ],
+      "moduleId": "parser/_edges.py"
+    },
+    {
+      "kind": "function",
+      "name": "resolve_reference",
+      "line": 281,
+      "signature": "(ref, symbol_table, module_index, source_id, module_defs, locals_, module_ports) -> Resolution",
+      "params": [
+        "ref",
+        "symbol_table",
+        "module_index",
+        "source_id",
+        "module_defs",
+        "locals_",
+        "module_ports"
+      ],
+      "docstring": "Resolve a call/inheritance/annotation/decorator reference (F3/F4).",
+      "moduleId": "parser/_edges.py"
+    },
+    {
+      "kind": "function",
+      "name": "is_stdlib",
+      "line": 20,
+      "signature": "(name) -> bool",
+      "params": [
+        "name"
+      ],
+      "moduleId": "parser/_external.py"
+    },
+    {
+      "kind": "function",
+      "name": "build_module_index",
+      "line": 24,
+      "signature": "(files, root) -> dict",
+      "params": [
+        "files",
+        "root"
+      ],
+      "docstring": "Map dotted module name -> module id (relative path, posix separators).",
+      "moduleId": "parser/_external.py"
+    },
+    {
+      "kind": "function",
+      "name": "classify",
+      "line": 42,
+      "signature": "(name, index) -> tuple",
+      "params": [
+        "name",
+        "index"
+      ],
+      "docstring": "Return ``(kind, module_id)`` where kind is local | stdlib | third_party.",
+      "moduleId": "parser/_external.py"
+    },
+    {
+      "kind": "class",
+      "name": "ExtractedPorts",
+      "line": 16,
+      "signature": "ExtractedPorts",
+      "params": [],
+      "moduleId": "parser/_ports.py"
+    },
+    {
+      "kind": "function",
+      "name": "extract_ports",
+      "line": 105,
+      "signature": "(tree) -> ExtractedPorts",
+      "params": [
+        "tree"
+      ],
+      "docstring": "Extract public ports from a parsed module (top-level statements only).",
+      "moduleId": "parser/_ports.py"
+    },
+    {
+      "kind": "function",
+      "name": "scan_codebase",
+      "line": 18,
+      "signature": "(root_path) -> dict",
+      "params": [
+        "root_path"
+      ],
+      "docstring": "Return a Graph dict matching the schema from issue #2 (5 top-level keys).",
+      "moduleId": "parser/_scanner.py"
+    },
+    {
+      "kind": "class",
+      "name": "Port",
+      "line": 13,
+      "signature": "Port",
+      "params": [],
+      "docstring": "A module's public connection surface: a function, class or export.",
+      "moduleId": "parser/_schema.py"
+    },
+    {
+      "kind": "class",
+      "name": "Module",
+      "line": 31,
+      "signature": "Module",
+      "params": [],
+      "docstring": "One ``.py`` file = one module (D1).",
+      "moduleId": "parser/_schema.py"
+    },
+    {
+      "kind": "class",
+      "name": "Edge",
+      "line": 47,
+      "signature": "Edge",
+      "params": [],
+      "docstring": "A dependency edge between two modules.",
+      "moduleId": "parser/_schema.py"
+    },
+    {
+      "kind": "class",
+      "name": "ExternalModule",
+      "line": 69,
+      "signature": "ExternalModule",
+      "params": [],
+      "docstring": "A third-party package that the codebase depends on.",
+      "moduleId": "parser/_schema.py"
+    },
+    {
+      "kind": "class",
+      "name": "Diagnostic",
+      "line": 81,
+      "signature": "Diagnostic",
+      "params": [],
+      "docstring": "A parser note: dynamic import, unresolved symbol or parse error.",
+      "moduleId": "parser/_schema.py"
+    },
+    {
+      "kind": "class",
+      "name": "Graph",
+      "line": 94,
+      "signature": "Graph",
+      "params": [],
+      "docstring": "The full scan result.",
+      "moduleId": "parser/_schema.py"
+    },
+    {
+      "kind": "function",
+      "name": "fixtures_dir",
+      "line": 11,
+      "signature": "() -> Path",
+      "params": [],
+      "moduleId": "parser/tests/conftest.py"
+    },
+    {
+      "kind": "function",
+      "name": "sample_pkg",
+      "line": 16,
+      "signature": "() -> Path",
+      "params": [],
+      "moduleId": "parser/tests/conftest.py"
+    },
+    {
+      "kind": "export",
+      "name": "save_user",
+      "line": 7,
+      "signature": "",
+      "params": [],
+      "moduleId": "parser/tests/fixtures/sample_pkg/__init__.py"
+    },
+    {
+      "kind": "export",
+      "name": "User",
+      "line": 7,
+      "signature": "",
+      "params": [],
+      "moduleId": "parser/tests/fixtures/sample_pkg/__init__.py"
+    },
+    {
+      "kind": "export",
+      "name": "SOME_CONSTANT",
+      "line": 7,
+      "signature": "",
+      "params": [],
+      "moduleId": "parser/tests/fixtures/sample_pkg/__init__.py"
+    },
+    {
+      "kind": "class",
+      "name": "User",
+      "line": 4,
+      "signature": "User",
+      "params": [],
+      "docstring": "A user account.",
+      "moduleId": "parser/tests/fixtures/sample_pkg/core.py"
+    },
+    {
+      "kind": "function",
+      "name": "save_user",
+      "line": 15,
+      "signature": "(name, email, *, active=True) -> User",
+      "params": [
+        "name",
+        "email",
+        "active"
+      ],
+      "docstring": "Persist a user to the database.",
+      "moduleId": "parser/tests/fixtures/sample_pkg/core.py"
+    },
+    {
+      "kind": "function",
+      "name": "no_return_annotation",
+      "line": 28,
+      "signature": "(x)",
+      "params": [
+        "x"
+      ],
+      "docstring": "Function without a return annotation (F2 regression).",
+      "moduleId": "parser/tests/fixtures/sample_pkg/core.py"
+    },
+    {
+      "kind": "class",
+      "name": "Admin",
+      "line": 10,
+      "signature": "Admin(User)",
+      "params": [],
+      "docstring": "An admin user.",
+      "moduleId": "parser/tests/fixtures/sample_pkg/main.py"
+    },
+    {
+      "kind": "class",
+      "name": "Decorated",
+      "line": 18,
+      "signature": "Decorated",
+      "params": [],
+      "docstring": "A class decorated with a foreign attribute.",
+      "moduleId": "parser/tests/fixtures/sample_pkg/main.py"
+    },
+    {
+      "kind": "function",
+      "name": "main",
+      "line": 22,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/fixtures/sample_pkg/main.py"
+    },
+    {
+      "kind": "function",
+      "name": "annotate",
+      "line": 32,
+      "signature": "(u) -> User",
+      "params": [
+        "u"
+      ],
+      "docstring": "Annotate with an imported type.",
+      "moduleId": "parser/tests/fixtures/sample_pkg/main.py"
+    },
+    {
+      "kind": "function",
+      "name": "dynamic_load",
+      "line": 37,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/fixtures/sample_pkg/main.py"
+    },
+    {
+      "kind": "function",
+      "name": "undefined_call",
+      "line": 42,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/fixtures/sample_pkg/main.py"
+    },
+    {
+      "kind": "function",
+      "name": "attribute_undefined",
+      "line": 46,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/fixtures/sample_pkg/main.py"
+    },
+    {
+      "kind": "function",
+      "name": "format_name",
+      "line": 6,
+      "signature": "(name) -> str",
+      "params": [
+        "name"
+      ],
+      "docstring": "Format a name for display.",
+      "moduleId": "parser/tests/fixtures/sample_pkg/utils.py"
+    },
+    {
+      "kind": "class",
+      "name": "Formatter",
+      "line": 15,
+      "signature": "Formatter",
+      "params": [],
+      "docstring": "Formats things.",
+      "moduleId": "parser/tests/fixtures/sample_pkg/utils.py"
+    },
+    {
+      "kind": "function",
+      "name": "use_builtins",
+      "line": 23,
+      "signature": "(items)",
+      "params": [
+        "items"
+      ],
+      "docstring": "Call builtins; these must not become unresolved symbols (F3).",
+      "moduleId": "parser/tests/fixtures/sample_pkg/utils.py"
+    },
+    {
+      "kind": "function",
+      "name": "use_submodule",
+      "line": 28,
+      "signature": "()",
+      "params": [],
+      "docstring": "Call into the core submodule imported via `from sample_pkg import core`.",
+      "moduleId": "parser/tests/fixtures/sample_pkg/utils.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_dynamic_import_detected_non_literal",
+      "line": 16,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_diagnostics.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_dynamic_import_literal_message",
+      "line": 25,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_diagnostics.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_dedup_by_kind_module_line",
+      "line": 33,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_diagnostics.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_sort_by_module_then_line",
+      "line": 42,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_diagnostics.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_collect_imports_from_main",
+      "line": 28,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_edges.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_from_import_submodule_binding_f17",
+      "line": 38,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_edges.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_relative_import_base_same_for_init_and_module",
+      "line": 44,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_edges.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_collect_references_kinds",
+      "line": 50,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_edges.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_local_names_collected",
+      "line": 56,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_edges.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_module_defs_collected",
+      "line": 62,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_edges.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_is_stdlib",
+      "line": 8,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_external.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_classify_local",
+      "line": 14,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_external.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_classify_third_party",
+      "line": 23,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_external.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_classify_stdlib",
+      "line": 28,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_external.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_module_index_maps_package_and_file",
+      "line": 33,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_external.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_excluded_dirs_are_stable",
+      "line": 47,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_external.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_core_ports_are_public_only",
+      "line": 16,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_ports.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_no_return_annotation_does_not_crash",
+      "line": 23,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_ports.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_save_user_signature_and_params",
+      "line": 29,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_ports.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_class_port_docstring_first_sentence",
+      "line": 37,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_ports.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_all_exports",
+      "line": 43,
+      "signature": "()",
+      "params": [],
+      "moduleId": "parser/tests/test_ports.py"
+    },
+    {
+      "kind": "function",
+      "name": "graph",
+      "line": 14,
+      "signature": "() -> dict",
+      "params": [],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_five_top_level_keys",
+      "line": 21,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_serializable",
+      "line": 25,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_modules_exclude_venv",
+      "line": 32,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_broken_syntax_not_a_module",
+      "line": 38,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_core_ports_present",
+      "line": 45,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_flat_ports_carry_module_id",
+      "line": 55,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_init_all_exports",
+      "line": 60,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_call_edge_to_core",
+      "line": 70,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_inheritance_edge",
+      "line": 78,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_decorator_edge",
+      "line": 88,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_annotation_edge",
+      "line": 98,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_import_and_from_import_edges",
+      "line": 108,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_attribute_call_to_external",
+      "line": 115,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_utils_submodule_attribute_edge",
+      "line": 123,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_external_modules",
+      "line": 137,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_dynamic_import_diagnostic",
+      "line": 143,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_unresolved_symbol_diagnostics",
+      "line": 149,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    },
+    {
+      "kind": "function",
+      "name": "test_no_builtin_diagnostics",
+      "line": 156,
+      "signature": "(graph)",
+      "params": [
+        "graph"
+      ],
+      "moduleId": "parser/tests/test_scan_codebase.py"
+    }
+  ],
+  "edges": [
+    {
+      "source": "backend/backend/app.py",
+      "target": "backend/backend/models.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 49
+        }
+      ]
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "backend/backend/models.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 80
+        }
+      ],
+      "targetPort": "StatusResponse"
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "backend/backend/models.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 15
+        }
+      ],
+      "targetPort": "ScanRequest"
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "backend/backend/models.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 15
+        }
+      ],
+      "targetPort": "StatusResponse"
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "backend/backend/scanner.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 16
+        }
+      ]
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "backend/backend/store.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 21
+        }
+      ],
+      "targetPort": "JobStore"
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "backend/backend/store.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 17
+        }
+      ],
+      "targetPort": "JobStore"
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "starlette.applications",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 112
+        }
+      ],
+      "targetPort": "Starlette"
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "starlette.applications",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 9
+        }
+      ],
+      "targetPort": "Starlette"
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "starlette.middleware.cors",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 10
+        }
+      ],
+      "targetPort": "CORSMiddleware"
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "starlette.requests",
+      "kind": "annotation",
+      "sites": [
+        {
+          "line": 40
+        },
+        {
+          "line": 74
+        },
+        {
+          "line": 84
+        }
+      ],
+      "targetPort": "Request"
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "starlette.requests",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 11
+        }
+      ],
+      "targetPort": "Request"
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "starlette.responses",
+      "kind": "annotation",
+      "sites": [
+        {
+          "line": 36
+        },
+        {
+          "line": 40
+        },
+        {
+          "line": 74
+        },
+        {
+          "line": 84
+        }
+      ],
+      "targetPort": "JSONResponse"
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "starlette.responses",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 37
+        },
+        {
+          "line": 71
+        },
+        {
+          "line": 81
+        },
+        {
+          "line": 91
+        }
+      ],
+      "targetPort": "JSONResponse"
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "starlette.responses",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 12
+        }
+      ],
+      "targetPort": "JSONResponse"
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "starlette.routing",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 107
+        },
+        {
+          "line": 108
+        },
+        {
+          "line": 109
+        }
+      ],
+      "targetPort": "Route"
+    },
+    {
+      "source": "backend/backend/app.py",
+      "target": "starlette.routing",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 13
+        }
+      ],
+      "targetPort": "Route"
+    },
+    {
+      "source": "backend/backend/models.py",
+      "target": "pydantic",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 9
+        }
+      ],
+      "targetPort": "Field"
+    },
+    {
+      "source": "backend/backend/models.py",
+      "target": "pydantic",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 5
+        }
+      ],
+      "targetPort": "BaseModel"
+    },
+    {
+      "source": "backend/backend/models.py",
+      "target": "pydantic",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 5
+        }
+      ],
+      "targetPort": "Field"
+    },
+    {
+      "source": "backend/backend/models.py",
+      "target": "pydantic",
+      "kind": "inheritance",
+      "sites": [
+        {
+          "line": 8
+        },
+        {
+          "line": 16
+        },
+        {
+          "line": 20
+        }
+      ],
+      "targetPort": "BaseModel"
+    },
+    {
+      "source": "backend/backend/scanner.py",
+      "target": "backend/backend/store.py",
+      "kind": "annotation",
+      "sites": [
+        {
+          "line": 12
+        }
+      ],
+      "targetPort": "JobStore"
+    },
+    {
+      "source": "backend/backend/scanner.py",
+      "target": "backend/backend/store.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 9
+        }
+      ],
+      "targetPort": "JobStore"
+    },
+    {
+      "source": "backend/backend/scanner.py",
+      "target": "parser/__init__.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 16
+        }
+      ],
+      "targetPort": "scan_codebase"
+    },
+    {
+      "source": "backend/backend/scanner.py",
+      "target": "parser/__init__.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 7
+        }
+      ],
+      "targetPort": "scan_codebase"
+    },
+    {
+      "source": "backend/tests/conftest.py",
+      "target": "backend.app",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 10
+        }
+      ],
+      "targetPort": "app"
+    },
+    {
+      "source": "backend/tests/conftest.py",
+      "target": "pytest",
+      "kind": "decorator",
+      "sites": [
+        {
+          "line": 13
+        },
+        {
+          "line": 19
+        },
+        {
+          "line": 25
+        }
+      ],
+      "targetPort": "fixture"
+    },
+    {
+      "source": "backend/tests/conftest.py",
+      "target": "pytest",
+      "kind": "import",
+      "sites": [
+        {
+          "line": 7
+        }
+      ]
+    },
+    {
+      "source": "backend/tests/conftest.py",
+      "target": "starlette.testclient",
+      "kind": "annotation",
+      "sites": [
+        {
+          "line": 26
+        }
+      ],
+      "targetPort": "TestClient"
+    },
+    {
+      "source": "backend/tests/conftest.py",
+      "target": "starlette.testclient",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 28
+        }
+      ],
+      "targetPort": "TestClient"
+    },
+    {
+      "source": "backend/tests/conftest.py",
+      "target": "starlette.testclient",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 8
+        }
+      ],
+      "targetPort": "TestClient"
+    },
+    {
+      "source": "backend/tests/fixtures/mini_pkg/__init__.py",
+      "target": "backend/tests/fixtures/mini_pkg/lib.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 3
+        }
+      ],
+      "targetPort": "helper"
+    },
+    {
+      "source": "backend/tests/fixtures/mini_pkg/main.py",
+      "target": "mini_pkg.lib",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 7
+        }
+      ],
+      "targetPort": "helper"
+    },
+    {
+      "source": "backend/tests/fixtures/mini_pkg/main.py",
+      "target": "mini_pkg.lib",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 3
+        }
+      ],
+      "targetPort": "helper"
+    },
+    {
+      "source": "backend/tests/test_api.py",
+      "target": "starlette.testclient",
+      "kind": "annotation",
+      "sites": [
+        {
+          "line": 13
+        },
+        {
+          "line": 26
+        },
+        {
+          "line": 43
+        },
+        {
+          "line": 51
+        },
+        {
+          "line": 58
+        },
+        {
+          "line": 69
+        }
+      ],
+      "targetPort": "TestClient"
+    },
+    {
+      "source": "backend/tests/test_api.py",
+      "target": "starlette.testclient",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 8
+        }
+      ],
+      "targetPort": "TestClient"
+    },
+    {
+      "source": "parser/__init__.py",
+      "target": "parser/_scanner.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 6
+        }
+      ],
+      "targetPort": "scan_codebase"
+    },
+    {
+      "source": "parser/__main__.py",
+      "target": "parser/__init__.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 23
+        }
+      ],
+      "targetPort": "scan_codebase"
+    },
+    {
+      "source": "parser/__main__.py",
+      "target": "parser/__init__.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 12
+        }
+      ],
+      "targetPort": "scan_codebase"
+    },
+    {
+      "source": "parser/_diagnostics.py",
+      "target": "parser/_schema.py",
+      "kind": "annotation",
+      "sites": [
+        {
+          "line": 16
+        }
+      ],
+      "targetPort": "Diagnostic"
+    },
+    {
+      "source": "parser/_diagnostics.py",
+      "target": "parser/_schema.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 51
+        }
+      ],
+      "targetPort": "Diagnostic"
+    },
+    {
+      "source": "parser/_diagnostics.py",
+      "target": "parser/_schema.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 7
+        }
+      ],
+      "targetPort": "Diagnostic"
+    },
+    {
+      "source": "parser/_edges.py",
+      "target": "parser/_external.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 238
+        },
+        {
+          "line": 270
+        },
+        {
+          "line": 327
+        }
+      ],
+      "targetPort": "classify"
+    },
+    {
+      "source": "parser/_edges.py",
+      "target": "parser/_external.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 15
+        }
+      ],
+      "targetPort": "classify"
+    },
+    {
+      "source": "parser/_edges.py",
+      "target": "parser/_schema.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 240
+        },
+        {
+          "line": 244
+        },
+        {
+          "line": 263
+        },
+        {
+          "line": 268
+        },
+        {
+          "line": 275
+        },
+        {
+          "line": 332
+        },
+        {
+          "line": 337
+        },
+        {
+          "line": 339
+        }
+      ],
+      "targetPort": "Edge"
+    },
+    {
+      "source": "parser/_edges.py",
+      "target": "parser/_schema.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 16
+        }
+      ],
+      "targetPort": "Edge"
+    },
+    {
+      "source": "parser/_ports.py",
+      "target": "parser/_schema.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 112
+        },
+        {
+          "line": 123
+        },
+        {
+          "line": 137
+        }
+      ],
+      "targetPort": "Port"
+    },
+    {
+      "source": "parser/_ports.py",
+      "target": "parser/_schema.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 12
+        }
+      ],
+      "targetPort": "Port"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_diagnostics.py",
+      "kind": "annotation",
+      "sites": [
+        {
+          "line": 79
+        }
+      ],
+      "targetPort": "Collector"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_diagnostics.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 25
+        }
+      ],
+      "targetPort": "Collector"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_diagnostics.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 56
+        }
+      ],
+      "targetPort": "collect_dynamic_imports"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_diagnostics.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 13
+        }
+      ]
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_edges.py",
+      "kind": "annotation",
+      "sites": [
+        {
+          "line": 79
+        }
+      ],
+      "targetPort": "Resolution"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_edges.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 51
+        }
+      ],
+      "targetPort": "collect_imports"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_edges.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 52
+        }
+      ],
+      "targetPort": "collect_references"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_edges.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 53
+        }
+      ],
+      "targetPort": "collect_local_names"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_edges.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 62
+        }
+      ],
+      "targetPort": "build_symbol_table"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_edges.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 63
+        }
+      ],
+      "targetPort": "collect_module_defs"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_edges.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 65
+        }
+      ],
+      "targetPort": "resolve_import"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_edges.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 68
+        }
+      ],
+      "targetPort": "resolve_reference"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_edges.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 13
+        }
+      ]
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_external.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 22
+        }
+      ],
+      "targetPort": "build_module_index"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_external.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 13
+        },
+        {
+          "line": 14
+        }
+      ]
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_external.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 14
+        }
+      ],
+      "targetPort": "build_module_index"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_ports.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 45
+        }
+      ],
+      "targetPort": "extract_ports"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_ports.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 13
+        }
+      ]
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_schema.py",
+      "kind": "annotation",
+      "sites": [
+        {
+          "line": 79
+        }
+      ],
+      "targetPort": "Graph"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_schema.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 24
+        }
+      ],
+      "targetPort": "Graph"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_schema.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 38
+        },
+        {
+          "line": 86
+        }
+      ],
+      "targetPort": "Diagnostic"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_schema.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 46
+        }
+      ],
+      "targetPort": "Module"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_schema.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 81
+        }
+      ],
+      "targetPort": "ExternalModule"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_schema.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 15
+        }
+      ],
+      "targetPort": "Diagnostic"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_schema.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 15
+        }
+      ],
+      "targetPort": "Edge"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_schema.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 15
+        }
+      ],
+      "targetPort": "ExternalModule"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_schema.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 15
+        }
+      ],
+      "targetPort": "Graph"
+    },
+    {
+      "source": "parser/_scanner.py",
+      "target": "parser/_schema.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 15
+        }
+      ],
+      "targetPort": "Module"
+    },
+    {
+      "source": "parser/tests/conftest.py",
+      "target": "pytest",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 10
+        },
+        {
+          "line": 15
+        }
+      ],
+      "targetPort": "fixture"
+    },
+    {
+      "source": "parser/tests/conftest.py",
+      "target": "pytest",
+      "kind": "import",
+      "sites": [
+        {
+          "line": 5
+        }
+      ]
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/__init__.py",
+      "target": "parser/tests/fixtures/sample_pkg/core.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 3
+        }
+      ],
+      "targetPort": "User"
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/__init__.py",
+      "target": "parser/tests/fixtures/sample_pkg/core.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 3
+        }
+      ],
+      "targetPort": "save_user"
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/main.py",
+      "target": "parser/tests/fixtures/sample_pkg/core.py",
+      "kind": "annotation",
+      "sites": [
+        {
+          "line": 32
+        }
+      ],
+      "targetPort": "User"
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/main.py",
+      "target": "parser/tests/fixtures/sample_pkg/core.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 23
+        }
+      ],
+      "targetPort": "save_user"
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/main.py",
+      "target": "parser/tests/fixtures/sample_pkg/core.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 6
+        }
+      ],
+      "targetPort": "User"
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/main.py",
+      "target": "parser/tests/fixtures/sample_pkg/core.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 6
+        }
+      ],
+      "targetPort": "save_user"
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/main.py",
+      "target": "parser/tests/fixtures/sample_pkg/core.py",
+      "kind": "inheritance",
+      "sites": [
+        {
+          "line": 10
+        }
+      ],
+      "targetPort": "User"
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/main.py",
+      "target": "parser/tests/fixtures/sample_pkg/utils.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 25
+        }
+      ],
+      "targetPort": "format_name"
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/main.py",
+      "target": "parser/tests/fixtures/sample_pkg/utils.py",
+      "kind": "decorator",
+      "sites": [
+        {
+          "line": 17
+        }
+      ],
+      "targetPort": "Formatter"
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/main.py",
+      "target": "parser/tests/fixtures/sample_pkg/utils.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 5
+        }
+      ]
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/main.py",
+      "target": "parser/tests/fixtures/sample_pkg/utils.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 7
+        }
+      ],
+      "targetPort": "format_name"
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/main.py",
+      "target": "requests",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 27
+        }
+      ],
+      "targetPort": "get"
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/main.py",
+      "target": "requests",
+      "kind": "import",
+      "sites": [
+        {
+          "line": 4
+        }
+      ]
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/utils.py",
+      "target": "sample_pkg",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 30
+        }
+      ],
+      "targetPort": "save_user"
+    },
+    {
+      "source": "parser/tests/fixtures/sample_pkg/utils.py",
+      "target": "sample_pkg",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 3
+        }
+      ],
+      "targetPort": "core"
+    },
+    {
+      "source": "parser/tests/test_diagnostics.py",
+      "target": "parser/_diagnostics.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 17
+        },
+        {
+          "line": 27
+        },
+        {
+          "line": 34
+        },
+        {
+          "line": 43
+        }
+      ],
+      "targetPort": "Collector"
+    },
+    {
+      "source": "parser/tests/test_diagnostics.py",
+      "target": "parser/_diagnostics.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 18
+        },
+        {
+          "line": 28
+        }
+      ],
+      "targetPort": "collect_dynamic_imports"
+    },
+    {
+      "source": "parser/tests/test_diagnostics.py",
+      "target": "parser/_diagnostics.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 6
+        }
+      ]
+    },
+    {
+      "source": "parser/tests/test_diagnostics.py",
+      "target": "parser/_schema.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 35
+        },
+        {
+          "line": 36
+        },
+        {
+          "line": 37
+        },
+        {
+          "line": 44
+        },
+        {
+          "line": 45
+        },
+        {
+          "line": 46
+        }
+      ],
+      "targetPort": "Diagnostic"
+    },
+    {
+      "source": "parser/tests/test_diagnostics.py",
+      "target": "parser/_schema.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 7
+        }
+      ],
+      "targetPort": "Diagnostic"
+    },
+    {
+      "source": "parser/tests/test_edges.py",
+      "target": "parser/_edges.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 29
+        },
+        {
+          "line": 40
+        },
+        {
+          "line": 46
+        }
+      ],
+      "targetPort": "collect_imports"
+    },
+    {
+      "source": "parser/tests/test_edges.py",
+      "target": "parser/_edges.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 40
+        },
+        {
+          "line": 46
+        }
+      ],
+      "targetPort": "build_symbol_table"
+    },
+    {
+      "source": "parser/tests/test_edges.py",
+      "target": "parser/_edges.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 51
+        }
+      ],
+      "targetPort": "collect_references"
+    },
+    {
+      "source": "parser/tests/test_edges.py",
+      "target": "parser/_edges.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 57
+        }
+      ],
+      "targetPort": "collect_local_names"
+    },
+    {
+      "source": "parser/tests/test_edges.py",
+      "target": "parser/_edges.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 63
+        }
+      ],
+      "targetPort": "collect_module_defs"
+    },
+    {
+      "source": "parser/tests/test_edges.py",
+      "target": "parser/_edges.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 6
+        }
+      ]
+    },
+    {
+      "source": "parser/tests/test_edges.py",
+      "target": "parser/_external.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 25
+        }
+      ],
+      "targetPort": "build_module_index"
+    },
+    {
+      "source": "parser/tests/test_edges.py",
+      "target": "parser/_external.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 6
+        }
+      ]
+    },
+    {
+      "source": "parser/tests/test_external.py",
+      "target": "parser/_external.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 9
+        },
+        {
+          "line": 10
+        },
+        {
+          "line": 11
+        }
+      ],
+      "targetPort": "is_stdlib"
+    },
+    {
+      "source": "parser/tests/test_external.py",
+      "target": "parser/_external.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 19
+        },
+        {
+          "line": 24
+        },
+        {
+          "line": 29
+        }
+      ],
+      "targetPort": "classify"
+    },
+    {
+      "source": "parser/tests/test_external.py",
+      "target": "parser/_external.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 40
+        }
+      ],
+      "targetPort": "build_module_index"
+    },
+    {
+      "source": "parser/tests/test_external.py",
+      "target": "parser/_external.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 5
+        }
+      ]
+    },
+    {
+      "source": "parser/tests/test_ports.py",
+      "target": "parser/_ports.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 17
+        },
+        {
+          "line": 25
+        },
+        {
+          "line": 30
+        },
+        {
+          "line": 38
+        },
+        {
+          "line": 44
+        }
+      ],
+      "targetPort": "extract_ports"
+    },
+    {
+      "source": "parser/tests/test_ports.py",
+      "target": "parser/_ports.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 6
+        }
+      ]
+    },
+    {
+      "source": "parser/tests/test_scan_codebase.py",
+      "target": "parser/__init__.py",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 15
+        }
+      ],
+      "targetPort": "scan_codebase"
+    },
+    {
+      "source": "parser/tests/test_scan_codebase.py",
+      "target": "parser/__init__.py",
+      "kind": "from_import",
+      "sites": [
+        {
+          "line": 8
+        }
+      ],
+      "targetPort": "scan_codebase"
+    },
+    {
+      "source": "parser/tests/test_scan_codebase.py",
+      "target": "pytest",
+      "kind": "call",
+      "sites": [
+        {
+          "line": 13
+        }
+      ],
+      "targetPort": "fixture"
+    },
+    {
+      "source": "parser/tests/test_scan_codebase.py",
+      "target": "pytest",
+      "kind": "import",
+      "sites": [
+        {
+          "line": 6
+        }
+      ]
+    }
+  ],
+  "externalModules": [
+    {
+      "id": "backend.app",
+      "name": "backend.app",
+      "kind": "third_party"
+    },
+    {
+      "id": "mini_pkg.lib",
+      "name": "mini_pkg.lib",
+      "kind": "third_party"
+    },
+    {
+      "id": "pydantic",
+      "name": "pydantic",
+      "kind": "third_party"
+    },
+    {
+      "id": "pytest",
+      "name": "pytest",
+      "kind": "third_party"
+    },
+    {
+      "id": "requests",
+      "name": "requests",
+      "kind": "third_party"
+    },
+    {
+      "id": "sample_pkg",
+      "name": "sample_pkg",
+      "kind": "third_party"
+    },
+    {
+      "id": "starlette.applications",
+      "name": "starlette.applications",
+      "kind": "third_party"
+    },
+    {
+      "id": "starlette.middleware.cors",
+      "name": "starlette.middleware.cors",
+      "kind": "third_party"
+    },
+    {
+      "id": "starlette.requests",
+      "name": "starlette.requests",
+      "kind": "third_party"
+    },
+    {
+      "id": "starlette.responses",
+      "name": "starlette.responses",
+      "kind": "third_party"
+    },
+    {
+      "id": "starlette.routing",
+      "name": "starlette.routing",
+      "kind": "third_party"
+    },
+    {
+      "id": "starlette.testclient",
+      "name": "starlette.testclient",
+      "kind": "third_party"
+    }
+  ],
+  "diagnostics": [
+    {
+      "kind": "parse_error",
+      "moduleId": "backend/tests/fixtures/broken_pkg/broken.py",
+      "line": 4,
+      "message": "syntax error: '(' was never closed"
+    },
+    {
+      "kind": "unresolved_symbol",
+      "moduleId": "parser/_edges.py",
+      "line": 180,
+      "message": "unresolved symbol 'join'"
+    },
+    {
+      "kind": "unresolved_symbol",
+      "moduleId": "parser/_external.py",
+      "line": 34,
+      "message": "unresolved symbol 'rstrip'"
+    },
+    {
+      "kind": "unresolved_symbol",
+      "moduleId": "parser/_external.py",
+      "line": 53,
+      "message": "unresolved symbol 'join'"
+    },
+    {
+      "kind": "unresolved_symbol",
+      "moduleId": "parser/_ports.py",
+      "line": 76,
+      "message": "unresolved symbol 'join'"
+    },
+    {
+      "kind": "unresolved_symbol",
+      "moduleId": "parser/_ports.py",
+      "line": 90,
+      "message": "unresolved symbol 'join'"
+    },
+    {
+      "kind": "unresolved_symbol",
+      "moduleId": "parser/_ports.py",
+      "line": 101,
+      "message": "unresolved symbol 'strip'"
+    },
+    {
+      "kind": "unresolved_symbol",
+      "moduleId": "parser/_scanner.py",
+      "line": 125,
+      "message": "unresolved symbol 'extend'"
+    },
+    {
+      "kind": "parse_error",
+      "moduleId": "parser/tests/fixtures/broken_syntax.py",
+      "line": 1,
+      "message": "syntax error: '(' was never closed"
+    },
+    {
+      "kind": "dynamic_import",
+      "moduleId": "parser/tests/fixtures/sample_pkg/main.py",
+      "line": 39,
+      "message": "dynamic import of non-literal target"
+    },
+    {
+      "kind": "unresolved_symbol",
+      "moduleId": "parser/tests/fixtures/sample_pkg/main.py",
+      "line": 43,
+      "message": "unresolved symbol 'undefined_symbol'"
+    },
+    {
+      "kind": "unresolved_symbol",
+      "moduleId": "parser/tests/fixtures/sample_pkg/main.py",
+      "line": 47,
+      "message": "unresolved symbol 'mystery_thing.call_me'"
+    },
+    {
+      "kind": "unresolved_symbol",
+      "moduleId": "parser/tests/test_scan_codebase.py",
+      "line": 151,
+      "message": "unresolved symbol 'join'"
+    }
+  ]
+}
