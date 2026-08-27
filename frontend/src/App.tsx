@@ -27,7 +27,6 @@ import type { Graph, Module } from './api/types';
 import type { ExternalNodeData, ModuleNodeData } from './lib/graphToFlow';
 import type { AtomNodeData, FeatureFlowGraph } from './lib/graphToFeatureFlow';
 import { graphToFeatureFlow } from './lib/graphToFeatureFlow';
-import { atomForFile } from './manifest/featureAtoms';
 import { useScanJob } from './hooks/useScanJob';
 import { graphToFlow, type AggregatedEdgeData } from './lib/graphToFlow';
 import { gridPositions, NODE_WIDTH, ATOM_NODE_WIDTH } from './lib/layout';
@@ -140,8 +139,7 @@ export default function App() {
       if (data.kind === 'atom') {
         // Drill-down: the files that make up this atom, with their ports.
         const members =
-          graph?.modules.filter((m) => atomForFile(m.id)?.id === data.atomId) ??
-          [];
+          graph?.modules.filter((m) => data.files.includes(m.id)) ?? [];
         setSelection({
           type: 'node',
           kind: 'atom',

@@ -88,11 +88,12 @@ describe('graphToFeatureFlow', () => {
     expect(extData.label).toBe('第三方依赖');
     expect(extData.externalNames).toEqual(['starlette.applications']);
 
-    // Edge to the aggregated node carries a plain Chinese label.
+    // Edge to the aggregated node: canvas label comes from data.displayLabel (C1),
+    // while edge.label keeps the merged kinds for the Inspector drill-down.
     const toExt = flow.edges.find((e) => e.target === THIRD_PARTY_NODE_ID);
     expect(toExt).toBeDefined();
     if (!toExt) return;
-    expect(toExt.label).toBe('依赖');
+    expect(toExt.label).toBe('from_import');
     const toExtData = toExt.data as unknown as { displayLabel?: string; rawEdges: unknown[] };
     expect(toExtData.displayLabel).toBe('依赖');
     expect(toExtData.rawEdges).toHaveLength(1);

@@ -14,8 +14,6 @@ import type { AggregatedEdgeData } from './graphToFlow';
 export type EndpointResolver = (id: string) => string | null;
 
 export interface AggregateEdgesOptions {
-  /** Custom edge label. Default: kinds joined by ", " (real-view behavior). */
-  formatLabel?: (kinds: string[]) => string;
   /** Extra fields merged into each edge's data (e.g. feature-view displayLabel). */
   extraData?: Record<string, unknown>;
 }
@@ -41,7 +39,6 @@ export function aggregateEdges(
     grouped.set(key, list);
   }
 
-  const formatLabel = options.formatLabel ?? ((kinds: string[]) => kinds.join(', '));
   const extraData = options.extraData ?? {};
 
   return [...grouped.entries()].map(([key, edges], index) => {
@@ -52,7 +49,7 @@ export function aggregateEdges(
       source,
       target,
       type: 'labeledEdge',
-      label: formatLabel(kinds),
+      label: kinds.join(', '),
       data: { kinds, rawEdges: edges, ...extraData },
       markerEnd: { type: MarkerType.ArrowClosed },
     };

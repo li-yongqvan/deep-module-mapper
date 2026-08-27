@@ -9,9 +9,9 @@
  * in both views. Handles fix the edge rendering for the real view and the
  * feature view's aggregated "第三方依赖" node alike.
  */
-import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
-import type { CSSProperties } from 'react';
+import { Position, type Node, type NodeProps } from '@xyflow/react';
 import type { ExternalNodeData } from '../lib/graphToFlow';
+import PortHandle from './PortHandle';
 
 export default function ExternalNode({ data }: NodeProps<Node<ExternalNodeData>>) {
   return (
@@ -36,17 +36,8 @@ export default function ExternalNode({ data }: NodeProps<Node<ExternalNodeData>>
       <div style={{ marginTop: 4, fontSize: 10, opacity: 0.8 }}>
         third-party
       </div>
-      <Handle type="target" position={Position.Left} style={handleStyle} />
-      <Handle type="source" position={Position.Right} style={handleStyle} />
+      <PortHandle type="target" position={Position.Left} />
+      <PortHandle type="source" position={Position.Right} />
     </div>
   );
 }
-
-/** 10px circular accent handle with a 2px node-color border (prototype §2.6). */
-const handleStyle: CSSProperties = {
-  width: 10,
-  height: 10,
-  borderRadius: '50%',
-  background: 'var(--accent, #38bdf8)',
-  border: '2px solid var(--bg, #0f172a)',
-};
