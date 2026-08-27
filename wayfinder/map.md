@@ -33,12 +33,11 @@ wayfinder: map
 - [build-core-backend-api](handoff-issue-5-complete.md) — 后端核心 API 已完成（PR #6）：Starlette + Uvicorn，内存 job 状态，三端点 `/api/scan`/`/status`/`/graph`，44 测试全绿；CORS、job 驱逐、错误格式等决策已落档。
 - [build-frontend-real-view](design-doc-issue-7-frontend-real-view.md) — 现实视图前端已完成（PR #9，2026-08-26）：Vite 8.2.2 + React 19.2.8 + `@xyflow/react` 12；路径输入 → 2s 轮询 → React Flow 渲染；红绿灯 naive 评分（`maxLine/portCount`，50/15 暂定）；外部模块灰色虚线节点；同对多边聚合；右侧 Inspector。18 测试全绿 + 真实 fixture 端到端验证。设计文档（合并审计：5 阻断+8 重要+10 次要全部采纳）+ 决策落档均已归档。
 - [module-map-north-star](module-map-north-star.md) — 视图设计北极星：读者是不懂代码的人；节点按「功能」聚合（AI 给出功能原子，最小可拖动单位）；接口数量尽量少 → 依赖简单。工作流 = 视图层先输出结果，人再据此在重组层优化。第一版用手工维护的功能清单顶替 AI 聚合。
-- [feature-view-functional-atoms](handoff-issue-8-feature-view-complete.md) — 功能视图已完成（PR #12，2026-08-27）：扫描 deep-module-mapper 自生图 29 文件节点 → 3 中文节点 / 2 边；functional-atom manifest（`frontend/src/manifest/feature-atoms.json`）；噪音默认隐藏；原子下钻成员文件；功能视图默认 + 顶部切换。设计文档 + 合并审计（有条件通过，W1-W3/I1-I5 已落实）+ code-review（无阻塞）+ 决策落档 D1-D8 均已归档。
+- [feature-view-functional-atoms](handoff-issue-8-feature-view-complete.md) — 功能视图已完成（PR #12，2026-08-27）：扫描 deep-module-mapper 自生图 29 文件节点 → 3 中文节点 / 2 边；functional-atom manifest（`frontend/src/manifest/feature-atoms.json`）；噪音默认隐藏；原子下钻成员文件；功能视图默认 + 顶部切换。设计文档 + 合并审计（有条件通过，W1-W3/I1-I5 已落实）+ code-review（无阻塞）+ 决策落档 D1-D8 均已归档。code-review 发现项已修复并 cherry-pick 进 master（`b2cc611`）：抽共享 PortHandle、NODE_WIDTH 统一、'依赖' 单通道 label、Inspector 下钻渲染测试，35/35 测试全绿。
 
 ## Open frontier
 
-- GitHub issue #13: [Feature-view follow-up: code-review findings cleanup](https://github.com/li-yongqvan/deep-module-mapper/issues/13) — 当前 active frontier ticket：#8 合并后清理（抽 PortHandle、统一宽度常量、边 label 单通道、补 Inspector 下钻渲染测试）。
-- GitHub issue #10: [Recomposition layer: custom canvas with module-content editing](https://github.com/li-yongqvan/deep-module-mapper/issues/10) — 依赖 #8（已关闭）；用户在画布上把功能原子拖进/拖出模块 + 连依赖。
+- GitHub issue #10: [Recomposition layer: custom canvas with module-content editing](https://github.com/li-yongqvan/deep-module-mapper/issues/10) — 当前 active frontier ticket：用户在画布上把功能原子拖进/拖出模块 + 连依赖。
 - GitHub issue #11: [AI aggregation: local model clusters files into functional atoms](https://github.com/li-yongqvan/deep-module-mapper/issues/11) — 依赖 #8（已关闭）；本地模型读文件内容自动判断功能原子，替代手工清单。
 
 ## Not yet specified
