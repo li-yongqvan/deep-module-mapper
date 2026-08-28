@@ -79,7 +79,16 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_FATAL
 
     try:
-        return run_aggregation(args.repo_path, config)
+        return run_aggregation(
+            args.repo_path,
+            config,
+            output=args.output,
+            compare=args.compare,
+            dry_run=args.dry_run,
+            skip_local=args.skip_local,
+            training_log=args.training_log,
+            report=args.report,
+        )
     except FatalError as exc:
         print(f"错误：{exc}", file=sys.stderr)
         return EXIT_FATAL

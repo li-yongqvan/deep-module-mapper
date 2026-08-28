@@ -22,7 +22,7 @@ def test_empty_env_yields_defaults_and_no_api_key():
     assert cfg.ollama_host == DEFAULT_OLLAMA_HOST
     assert cfg.ollama_model == DEFAULT_OLLAMA_MODEL
     assert cfg.llm_timeout_s == 60
-    assert cfg.ollama_timeout_s == 120
+    assert cfg.ollama_timeout_s == 300
     assert cfg.llm_api_key is None
     assert cfg.has_api_key is False  # INV11: missing key is detectable
 

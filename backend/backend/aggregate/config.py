@@ -16,7 +16,11 @@ DEFAULT_LLM_MODEL = "deepseek-chat"
 DEFAULT_OLLAMA_HOST = "http://127.0.0.1:11434"
 DEFAULT_OLLAMA_MODEL = "my-assistant"
 DEFAULT_LLM_TIMEOUT_S = 60
-DEFAULT_OLLAMA_TIMEOUT_S = 120
+# Real-e2e finding (issue #11): qwen3:8b generating a full feature-atom manifest
+# from a 12K digest takes well over 120s; a too-short timeout yields an empty
+# response and loses the learning record. 300s gives the best-effort local step
+# room to finish so its real (even if invalid) output is captured for training.
+DEFAULT_OLLAMA_TIMEOUT_S = 300
 
 
 class ConfigError(Exception):
