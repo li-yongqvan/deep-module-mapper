@@ -52,11 +52,14 @@ REPAIR_TEMPLATE = (
 # LEARN_TEMPLATE — the local model's learning role (S6/D14/U6): compare its own
 # attempt with the API's authoritative answer and reflect on the difference.
 # Deliberately loose format — it is learning material, not a product artifact.
+# {{ERROR_SECTION}} is injected (empty for a valid local attempt) so the model
+# also sees WHY its own attempt was rejected — learning from one's mistakes.
 LEARN_TEMPLATE = (
     "你是正在学习「代码库功能原子聚合」任务的本地模型。下面是同一个代码库的两个"
     "聚合结果：\n"
     "- 云端大模型的答案（权威参考）：\n{{API_OUTPUT}}\n"
-    "- 你自己的答案：\n{{LOCAL_OUTPUT}}\n\n"
+    "- 你自己的答案：\n{{LOCAL_OUTPUT}}\n"
+    "{{ERROR_SECTION}}"
     "请对比两者，反思差异：\n"
     "1. 哪些文件被分到了不同的功能原子？\n"
     "2. 你漏掉了什么线索（imports、端口签名、docstring、功能相关性）？\n"
@@ -79,10 +82,15 @@ def render_repair_prompt(raw_output: str, error: str) -> str:
     )
 
 
-def render_learn_prompt(local_output: str, api_output: str) -> str:
-    """Render the learning-reflection prompt for the local model (S6)."""
+def render_learn_prompt(local_output: str, api_output: str, error: str | None = None) -> str:
+    """Render the learning-reflection prompt for the local model (S6).
+
+    ``error`` (the local attempt's validation error, when it was rejected) is
+    injected so the model learns from exactly what it got wrong.
+    """
+    error_section = ("你的答案被校验拒绝了，错误：" + error + "\n\n") if error else ""
     return (
-        LEARN_TEMPLATE.replace("{{LOCAL_OUTPUT}}", local_output).replace(
-            "{{API_OUTPUT}}", api_output
-        )
+        LEARN_TEMPLATE.replace("{{LOCAL_OUTPUT}}", local_output)
+        .replace("{{API_OUTPUT}}", api_output)
+        .replace("{{ERROR_SECTION}}", error_section)
     )

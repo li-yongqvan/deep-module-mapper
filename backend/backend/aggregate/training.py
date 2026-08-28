@@ -163,8 +163,10 @@ def run_local_learning(
     """Best-effort local attempt + optional learn reflection (D14/U6).
 
     Always runs the local attempt and records it; the learn reflection runs
-    only when the local attempt is usable AND the API answer exists. Returns a
-    result the runner folds into the report; never raises on local failure.
+    whenever the local model produced text AND the API answer exists — even an
+    invalid local attempt is reflected on (its validation error is fed back),
+    because learning from one's mistakes is the point. Returns a result the
+    runner folds into the report; never raises on local failure.
     """
     warnings: list[str] = []
     records = [api_record_row] if api_record_row is not None else []
@@ -192,10 +194,16 @@ def run_local_learning(
         )
     )
 
-    # Learn reflection — only when both sides produced usable output.
+    # Learn reflection — whenever the local model produced any text (even an
+    # invalid manifest) AND the API answer exists. The whole point is learning
+    # from the difference, including from one's own invalid output: its
+    # validation error is threaded into the reflection prompt so the model sees
+    # exactly what it got wrong (U6). Gate relaxed 2026-08-28 — it previously
+    # required a parsed manifest, which qwen3:8b never produced, so the
+    # reflection never fired.
     learn_ok: bool | None = None
-    if local_ok and parse_err is None and api_raw:
-        learn_user = prompt.render_learn_prompt(text, api_raw)
+    if local_ok and api_raw:
+        learn_user = prompt.render_learn_prompt(text, api_raw, error=parse_err)
         learn = local.generate(prompt.SYSTEM_PROMPT, learn_user)
         learn_ok = learn.ok and learn.text is not None
         records.append(

@@ -134,10 +134,13 @@ def test_local_failure_is_not_fatal(tmp_path):
     assert "learn" not in roles  # reflection needs a usable local attempt
 
 
-def test_local_invalid_output_keeps_raw_in_sidecar_and_skips_learn(tmp_path):
+def test_local_invalid_output_still_learns_from_its_error(tmp_path):
     _write_repo(tmp_path)
     api = ScriptedProvider(ProviderResult(text=VALID, ok=True))
-    local = ScriptedProvider(ProviderResult(text="not valid json {", ok=True))
+    local = ScriptedProvider(
+        ProviderResult(text="not valid json {", ok=True),  # local attempt (invalid)
+        ProviderResult(text="我的输出不合法，漏了 beta.py。", ok=True),  # learn
+    )
     out = tmp_path / "m.json"
     log = tmp_path / "train.jsonl"
 
@@ -152,10 +155,14 @@ def test_local_invalid_output_keeps_raw_in_sidecar_and_skips_learn(tmp_path):
 
     assert code == EXIT_OK
     sidecar = json.loads((out.parent / "feature-atoms.local.json").read_text(encoding="utf-8"))
-    assert sidecar["ok"] is False
+    assert sidecar["ok"] is False  # still recorded as an invalid attempt
     assert sidecar["raw_output"] == "not valid json {"
     roles = [r["role"] for r in _log_lines(log)]
-    assert roles == ["api", "local"]  # no learn without a parsed local answer
+    assert roles == ["api", "local", "learn"]  # reflection fires even on an invalid attempt
+    learn = _log_lines(log)[2]
+    assert learn["input"]["local_output"] == "not valid json {"
+    assert learn["input"]["api_output"] == VALID
+    assert "不是合法 JSON" in learn["prompt"]  # the validation error is fed back (U6)
 
 
 def test_skip_local_never_calls_local_and_writes_no_sidecar(tmp_path):
