@@ -4,9 +4,13 @@ import {
   THIRD_PARTY_NODE_ID,
 } from '../lib/graphToFeatureFlow';
 import type { AtomNodeData } from '../lib/graphToFeatureFlow';
+import { depthScore } from '../lib/depthScore';
 import type { Graph } from '../api/types';
 // Real self-scan snapshot of deep-module-mapper (issue #8 §2.2).
 import deepModuleMapperGraph from './fixtures/deep-module-mapper.graph.json';
+// Grouping is AI-proposed (issue #11), so every expectation is derived from the
+// manifest at runtime — never pinned to a specific atom id/name/grouping.
+import { atomForFile, FEATURE_ATOMS } from '../manifest/featureAtoms';
 
 const baseGraph: Graph = {
   modules: [
@@ -21,27 +25,43 @@ const baseGraph: Graph = {
   diagnostics: [],
 };
 
+/** Atoms that match ≥1 module of a graph, in manifest order. */
+const atomIdsFor = (graph: Graph): string[] =>
+  FEATURE_ATOMS.filter((a) => graph.modules.some((m) => atomForFile(m.id)?.id === a.id)).map(
+    (a) => a.id,
+  );
+
+// graphToFeatureFlow pushes files in graph-module order (same loop below), so
+// this helper must mirror that order — sorting would mismatch the component.
+const filesForAtom = (graph: Graph, atomId: string): string[] =>
+  graph.modules.filter((m) => atomForFile(m.id)?.id === atomId).map((m) => m.id);
+
 describe('graphToFeatureFlow', () => {
   it('maps files to atoms and titles nodes with the Chinese name + description', () => {
     const flow = graphToFeatureFlow(baseGraph);
     const atomNodes = flow.nodes.filter((n) => n.data.kind === 'atom');
-    expect(atomNodes).toHaveLength(2); // scan-and-parse + scan-api
+    const expectedAtomIds = atomIdsFor(baseGraph);
+    expect(atomNodes).toHaveLength(expectedAtomIds.length);
 
-    const scanParse = atomNodes.find((n) => n.data.kind === 'atom' && n.data.atomId === 'scan-and-parse');
-    const data = scanParse?.data as AtomNodeData;
-    expect(data.name).toBe('扫描并解析代码库');
-    expect(data.description).toContain('读取代码库');
-    expect(data.files).toEqual(['parser/_scanner.py', 'parser/_ports.py']);
-    expect(scanParse?.id).toBe('atom:scan-and-parse');
+    for (const node of atomNodes) {
+      const data = node.data as AtomNodeData;
+      const atom = FEATURE_ATOMS.find((a) => a.id === data.atomId);
+      expect(atom, `node atomId ${data.atomId} must exist in the manifest`).toBeDefined();
+      if (!atom) continue;
+      expect(data.name).toBe(atom.name); // title from the manifest
+      expect(data.description).toBe(atom.description);
+      expect(data.files).toEqual(filesForAtom(baseGraph, atom.id)); // this-graph members
+      expect(node.id).toBe(`atom:${atom.id}`); // node id prefix contract (audit I2)
+    }
   });
 
-  it('hides noise files (tests/fixtures/__init__.py not in an atom)', () => {
+  it('hides noise files (tests/fixtures not in any atom)', () => {
     const flow = graphToFeatureFlow(baseGraph);
-    // parser/tests/test_edges.py is unassigned → no node for it, but it is counted.
-    expect(flow.nodes.some((n) => n.data.kind === 'atom' && n.id === 'atom:scan-and-parse')).toBe(true);
-    expect(flow.unassignedCount).toBe(1);
+    const unassigned = baseGraph.modules.filter((m) => !atomForFile(m.id));
+    expect(flow.unassignedCount).toBe(unassigned.length);
+    expect(flow.nodes.some((n) => n.data.kind === 'atom' && n.id.startsWith('atom:'))).toBe(true);
     const ids = flow.nodes.map((n) => n.id);
-    expect(ids).not.toContain('parser/tests/test_edges.py');
+    expect(ids).not.toContain('parser/tests/test_edges.py'); // never a rendered node
   });
 
   it('aggregates edges: cross-atom → one edge, same-atom → dropped, noise → dropped', () => {
@@ -55,14 +75,28 @@ describe('graphToFeatureFlow', () => {
       ],
     };
     const flow = graphToFeatureFlow(graph);
-    // Only the cross-atom edge survives.
-    const atomEdges = flow.edges.filter(
-      (e) => e.source === 'atom:scan-api' && e.target === 'atom:scan-and-parse',
-    );
-    expect(atomEdges).toHaveLength(1);
-    // Same-atom + noise edges dropped.
-    expect(flow.edges.some((e) => e.source === 'atom:scan-and-parse' && e.target === 'atom:scan-and-parse')).toBe(false);
-    expect(flow.edges).toHaveLength(1);
+    const sAtom = atomForFile('backend/backend/app.py')?.id;
+    const tAtom = atomForFile('parser/_scanner.py')?.id;
+    const isCrossAtom = Boolean(sAtom && tAtom && sAtom !== tAtom);
+
+    // Same-atom + noise edges are dropped regardless of grouping.
+    expect(flow.edges.some((e) => e.source === e.target && e.source.startsWith('atom:'))).toBe(false);
+    expect(
+      flow.edges.some(
+        (e) => e.source === 'parser/tests/test_edges.py' || e.target === 'parser/tests/test_edges.py',
+      ),
+    ).toBe(false);
+
+    if (isCrossAtom) {
+      // The cross-atom app.py→scanner.py edge survives as exactly one atom edge.
+      expect(
+        flow.edges.filter((e) => e.source === `atom:${sAtom}` && e.target === `atom:${tAtom}`),
+      ).toHaveLength(1);
+      expect(flow.edges).toHaveLength(1);
+    } else {
+      // When the manifest groups both files into one atom, nothing survives.
+      expect(flow.edges).toHaveLength(0);
+    }
   });
 
   it('folds third-party imports into one node and keeps a non-developer edge label (C1/I2)', () => {
@@ -76,6 +110,7 @@ describe('graphToFeatureFlow', () => {
     };
     const flow = graphToFeatureFlow(graph);
     const extNode = flow.nodes.find((n) => n.id === THIRD_PARTY_NODE_ID);
+    // app.py is a production module → always assigned (C2) and imports starlette.
     expect(extNode).toBeDefined();
     if (!extNode) return;
     expect(extNode.data.kind).toBe('external');
@@ -101,17 +136,23 @@ describe('graphToFeatureFlow', () => {
 
   it('scores an atom from the union of its files ports', () => {
     const flow = graphToFeatureFlow(baseGraph);
-    const scanApi = flow.nodes.find((n) => n.data.kind === 'atom' && n.data.atomId === 'scan-api');
-    const data = scanApi?.data as AtomNodeData;
-    expect(data.portCount).toBe(1); // backend/backend/app.py only
-    expect(data.score).toBe('shallow'); // 1 port, line 12 → ratio 12 < 15
+    for (const node of flow.nodes) {
+      if (node.data.kind !== 'atom') continue;
+      const data = node.data as AtomNodeData;
+      const members = baseGraph.modules.filter((m) => atomForFile(m.id)?.id === data.atomId);
+      const ports = members.flatMap((m) => m.ports);
+      expect(data.portCount).toBe(ports.length); // union, not one-file-only
+      expect(data.score).toBe(depthScore(ports));
+    }
   });
 
   it('exposes member files for drill-down', () => {
     const flow = graphToFeatureFlow(baseGraph);
-    const scanApi = flow.nodes.find((n) => n.data.kind === 'atom' && n.data.atomId === 'scan-api');
-    const data = scanApi?.data as AtomNodeData;
-    expect(data.files).toEqual(['backend/backend/app.py']);
+    for (const node of flow.nodes) {
+      if (node.data.kind !== 'atom') continue;
+      const data = node.data as AtomNodeData;
+      expect(data.files).toEqual(filesForAtom(baseGraph, data.atomId));
+    }
   });
 
   it('reports isEmpty for an empty modules array (M5)', () => {
@@ -121,25 +162,28 @@ describe('graphToFeatureFlow', () => {
     expect(flow.edges).toHaveLength(0);
   });
 
-  it('renders the real deep-module-mapper scan as 2 atoms + 1 third-party node', () => {
-    const flow = graphToFeatureFlow(deepModuleMapperGraph as unknown as Graph);
+  it('renders the real deep-module-mapper scan with every module accounted for', () => {
+    const graph = deepModuleMapperGraph as unknown as Graph;
+    const flow = graphToFeatureFlow(graph);
+    const assignedAtomIds = atomIdsFor(graph);
     const atomNodes = flow.nodes.filter((n) => n.data.kind === 'atom');
     const externalNodes = flow.nodes.filter((n) => n.data.kind === 'external');
-    expect(flow.nodes).toHaveLength(3); // 2 atoms + 1 third-party (issue #8 goal)
-    expect(atomNodes).toHaveLength(2);
-    expect(externalNodes).toHaveLength(1);
-    expect(flow.unassignedCount).toBe(17);
+
+    expect(atomNodes).toHaveLength(assignedAtomIds.length);
+    expect(externalNodes.length).toBeLessThanOrEqual(1); // 0 or 1 aggregated node
+    expect(flow.nodes).toHaveLength(atomNodes.length + externalNodes.length);
+
+    // unassignedCount is the file-modules hidden as noise — derived, not pinned
+    // to a fixed number (F5): any manifest change must not hard-code it here.
+    const unassigned = graph.modules.filter((m) => !atomForFile(m.id));
+    expect(flow.unassignedCount).toBe(unassigned.length);
 
     const names = atomNodes.map((n) => (n.data as AtomNodeData).name);
-    expect(names).toContain('扫描并解析代码库');
-    expect(names).toContain('扫描 API 服务');
-
-    // Aggregated edges: scan-api → scan-and-parse, scan-api → 第三方依赖.
-    expect(
-      flow.edges.some((e) => e.source === 'atom:scan-api' && e.target === 'atom:scan-and-parse'),
-    ).toBe(true);
-    expect(flow.edges.some((e) => e.source === 'atom:scan-api' && e.target === THIRD_PARTY_NODE_ID)).toBe(true);
-    expect(flow.edges).toHaveLength(2);
+    for (const atom of FEATURE_ATOMS) {
+      if (assignedAtomIds.includes(atom.id)) {
+        expect(names).toContain(atom.name);
+      }
+    }
 
     // No dangling edges (I2 backstop): every endpoint has a rendered node.
     const known = new Set(flow.nodes.map((n) => n.id));
@@ -147,5 +191,7 @@ describe('graphToFeatureFlow', () => {
       expect(known.has(e.source)).toBe(true);
       expect(known.has(e.target)).toBe(true);
     }
+    // Unique node ids.
+    expect(known.size).toBe(flow.nodes.length);
   });
 });

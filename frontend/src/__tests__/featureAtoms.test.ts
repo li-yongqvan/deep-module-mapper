@@ -36,9 +36,10 @@ describe('featureAtoms manifest', () => {
     }
   });
 
-  it('resolves file → atom and leaves noise/unknown files unassigned', () => {
-    expect(atomForFile('parser/_scanner.py')?.id).toBe('scan-and-parse');
-    expect(atomForFile('backend/backend/store.py')?.id).toBe('scan-api');
+  it('leaves noise and unknown files unassigned', () => {
+    // Grouping is AI-proposed (issue #11) — no specific atom id is pinned here.
+    // What must hold for any valid manifest: noise and unknown files are never
+    // assigned (INV3 mirrors), and every production module IS (C2, next test).
     expect(atomForFile('parser/tests/test_edges.py')).toBeUndefined();
     expect(atomForFile('backend/tests/fixtures/mini_pkg/lib.py')).toBeUndefined();
     expect(atomForFile('unknown.py')).toBeUndefined();
