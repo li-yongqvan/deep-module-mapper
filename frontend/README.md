@@ -19,7 +19,11 @@
 
 ### 分组事实源：功能原子清单（manifest）
 
-手工维护的 JSON 是分组唯一事实源（AI 聚合后续版本会产出同格式，可直接替换）：
+manifest 由 **AI 聚合 CLI**（issue #11）生成，格式与手工版 drop-in 兼容，可随时重跑替换：
+
+```bash
+python -m backend.backend.aggregate <repo> --compare frontend/src/manifest/feature-atoms.json
+```
 
 `frontend/src/manifest/feature-atoms.json`
 
@@ -41,7 +45,7 @@
 **如何编辑**：
 - 把一个文件归入某原子：在对应原子的 `files` 里加该路径。
 - 新增一个原子：加一个对象（id 唯一、文件路径不与其他原子重复）。
-- 仓库自带的 curated manifest 覆盖 `parser/` 与 `backend/` 的 12 个生产文件。
+- 仓库自带的 manifest 覆盖全部非噪声生产文件（含 `parser/`、`backend/` 与 `backend/backend/aggregate/*`）。
 
 **注意**：curated manifest 的路径相对仓库根目录——**从仓库根目录扫描**才能命中（例：`deep-module-mapper` 本目录）。扫描子目录得到的是该子目录相对路径，不会命中，此时功能视图为空、需切现实视图。
 
@@ -119,7 +123,7 @@ npm test
 - `useScanJob.test.tsx` — 轮询状态机（happy path / 扫描失败 / job 丢失 / graph 失败重试 / 空图）
 - `depthScore.test.ts` — naive 深度评分
 - `graphToFlow.test.ts` — Graph → React Flow 转换（外部模块、多边聚合、悬空边过滤）
-- `featureAtoms.test.ts` — 功能原子 manifest（结构、文件→原子映射、对 self-scan fixture 快照的完备性断言）
+- `featureAtoms.test.ts` — 功能原子 manifest（结构、文件→原子映射、C2 覆盖与噪声排除断言；断言分组无关，AI 重生成不破坏）
 - `graphToFeatureFlow.test.ts` — 功能视图转换（映射/噪音过滤/边聚合/第三方聚合/下钻/空图，含真实 fixture）
 - `Inspector.test.tsx` — 详情面板下钻（原子/第三方/边/重组模块/手动边/删除边按钮）
 - `recompose.derive.test.ts` — 重组派生（初始分组、模块尺寸、子网格、聚合接口、节点派生）
