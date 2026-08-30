@@ -1,13 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import type { Graph } from '../api/types';
+import type { Graph, Edge } from '../api/types';
 import {
+  checkDependency,
   computeAggregatedModuleEdges,
   edgeKey,
   finalEdges,
   onConnectEdge,
   onDeleteEdge,
   parseEdgeId,
+  rejectionMessage,
+  shouldShowFeedback,
+  REJECTION_FEEDBACK_COOLDOWN_MS,
 } from '../lib/recompose/edges';
+import type { AggregatedEdgeData } from '../lib/graphToFlow';
+import { type Edge as FlowEdge } from '@xyflow/react';
 import { THIRD_PARTY_NODE_ID } from '../lib/graphToFeatureFlow';
 import type { RecomposedDesign } from '../lib/recompose/types';
 // Real self-scan snapshot of deep-module-mapper.
@@ -62,6 +68,23 @@ const baseGraph: Graph = {
   externalModules: [],
   diagnostics: [],
 };
+
+/** A synthetic aggregated edge carrying real raw-edge evidence. */
+function aggEdge(
+  source: string,
+  target: string,
+  rawEdges: Edge[],
+): FlowEdge<AggregatedEdgeData> {
+  return {
+    id: `module-edge-${source}->${target}`,
+    source,
+    target,
+    type: 'labeledEdge',
+    label: 'call',
+    data: { kinds: [...new Set(rawEdges.map((e) => e.kind))], rawEdges, displayLabel: '依赖', aggregated: true },
+    markerEnd: { type: 'arrowclosed' as never },
+  };
+}
 
 describe('edgeKey / parseEdgeId', () => {
   it('round-trips both edge id schemes', () => {
@@ -181,117 +204,172 @@ describe('computeAggregatedModuleEdges', () => {
   });
 });
 
-describe('finalEdges', () => {
-  const aggEdge = {
-    id: 'module-edge-atom:a->atom:b',
-    source: 'atom:a',
-    target: 'atom:b',
-    type: 'labeledEdge',
-    label: 'call',
-    data: { kinds: ['call'], rawEdges: [], displayLabel: '依赖', aggregated: true },
-  };
+describe('checkDependency (draw-to-verify, #18)', () => {
+  const raw: Edge[] = [
+    {
+      source: APP,
+      target: SCANNER,
+      targetPort: 'scan_codebase',
+      kind: 'from_import',
+      sites: [{ line: 42 }],
+    },
+  ];
+  const forward = aggEdge('atom:a', 'atom:b', raw);
+  const backward = aggEdge('atom:b', 'atom:a', raw);
 
-  it('hides auto edges that are in hiddenEdges', () => {
-    const d: RecomposedDesign = { ...baseDesign, hiddenEdges: [{ source: 'atom:a', target: 'atom:b' }] };
-    const edges = finalEdges([aggEdge as never], d);
-    expect(edges).toHaveLength(0);
+  it('real: forward pair exists in the aggregated set, with raw-edge evidence', () => {
+    const r = checkDependency([forward], 'atom:a', 'atom:b');
+    expect(r.status).toBe('real');
+    expect(r.evidence).toBeDefined();
+    expect(r.evidence!.data!.rawEdges).toHaveLength(1);
+    expect(r.evidence!.data!.rawEdges[0]).toMatchObject({
+      targetPort: 'scan_codebase',
+      kind: 'from_import',
+      sites: [{ line: 42 }],
+    });
   });
 
-  it('adds manual edges with the fixed shape (#1)', () => {
-    const d: RecomposedDesign = {
-      ...baseDesign,
-      addedEdges: [{ source: 'atom:x', target: 'atom:y' }],
-    };
-    const edges = finalEdges([aggEdge as never], d);
-    const manual = edges.find((e) => e.id === 'manual-edge-atom:x->atom:y');
-    expect(manual).toBeDefined();
-    if (!manual) return;
-    expect(manual.source).toBe('atom:x');
-    expect(manual.type).toBe('labeledEdge');
-    const data = manual.data as Record<string, unknown>;
-    expect(data.manual).toBe(true);
-    expect(data.kinds).toEqual([]);
-    expect(data.rawEdges).toEqual([]);
-    expect(data.displayLabel).toBe('手动');
+  it('reversed: only the backward pair exists → status reversed with that evidence', () => {
+    const r = checkDependency([backward], 'atom:a', 'atom:b');
+    expect(r.status).toBe('reversed');
+    expect(r.evidence!.source).toBe('atom:b');
+    expect(r.evidence!.target).toBe('atom:a');
   });
 
-  it('lets an auto edge win the same key as a manual one', () => {
-    const d: RecomposedDesign = {
-      ...baseDesign,
-      addedEdges: [{ source: 'atom:a', target: 'atom:b' }],
-    };
-    const edges = finalEdges([aggEdge as never], d);
-    expect(edges).toHaveLength(1);
-    expect(edges[0].id).toBe('module-edge-atom:a->atom:b');
+  it('none: neither direction exists → no evidence', () => {
+    const r = checkDependency([forward], 'atom:a', 'atom:c');
+    expect(r.status).toBe('none');
+    expect(r.evidence).toBeUndefined();
+  });
+
+  it('forward wins when both directions exist (direction-sensitive, D5)', () => {
+    const r = checkDependency([forward, backward], 'atom:a', 'atom:b');
+    expect(r.status).toBe('real');
+    expect(r.evidence!.source).toBe('atom:a');
   });
 });
 
-describe('edge transition table (#3)', () => {
-  const aggKeys = new Set(['atom:a->atom:b']);
+describe('rejectionMessage (#18 D4/D5 wording)', () => {
+  const namedDesign: RecomposedDesign = {
+    version: 1,
+    modules: [
+      { id: 'mod:scan', name: '扫描模块', description: '', atomIds: [], position: { x: 0, y: 0 }, implicit: false, nameCustomized: false, descriptionCustomized: false },
+      { id: 'mod:web', name: 'Web模块', description: '', atomIds: [], position: { x: 0, y: 0 }, implicit: false, nameCustomized: false, descriptionCustomized: false },
+    ],
+    addedEdges: [],
+    hiddenEdges: [],
+  };
 
-  it('delete aggregated edge -> hiddenEdges += key', () => {
-    const d = onDeleteEdge(baseDesign, 'module-edge-atom:a->atom:b', aggKeys);
-    expect(d.hiddenEdges).toEqual([{ source: 'atom:a', target: 'atom:b' }]);
+  it('none: 无任何依赖关系, naming the drawn source/target', () => {
+    expect(
+      rejectionMessage({ status: 'none' }, namedDesign, 'mod:scan', 'mod:web'),
+    ).toBe('这两个模块之间无任何依赖关系（扫描模块 的文件里没有任何 import 指向 Web模块）');
   });
 
-  it('delete manual edge -> addedEdges -= key', () => {
-    const base: RecomposedDesign = {
-      ...baseDesign,
-      addedEdges: [{ source: 'atom:x', target: 'atom:y' }],
-    };
-    const d = onDeleteEdge(base, 'manual-edge-atom:x->atom:y', aggKeys);
-    expect(d.addedEdges).toEqual([]);
+  it('reversed: 实际是 B 依赖 A，方向反了', () => {
+    expect(
+      rejectionMessage({ status: 'reversed' }, namedDesign, 'mod:scan', 'mod:web'),
+    ).toBe('实际是 Web模块 依赖 扫描模块，方向反了');
+  });
+});
+
+describe('shouldShowFeedback (#18 §9 Q1 one-shot gate)', () => {
+  const sig = 'mod:scan->mod:web|none';
+  const now = 1_000_000;
+
+  it('first call for a signature fires', () => {
+    expect(shouldShowFeedback(null, sig, now)).toBe(true);
   });
 
-  it('dual edge delete -> hiddenEdges += key AND addedEdges -= key', () => {
-    const base: RecomposedDesign = {
+  it('immediate repeat of the same signature is suppressed', () => {
+    const gate = { signature: sig, shownAt: now };
+    expect(shouldShowFeedback(gate, sig, now + 50)).toBe(false);
+  });
+
+  it('a different signature fires even within the cooldown window', () => {
+    const gate = { signature: sig, shownAt: now };
+    expect(shouldShowFeedback(gate, 'mod:web->mod:scan|reversed', now + 50)).toBe(true);
+  });
+
+  it('the same signature fires again after the cooldown elapses', () => {
+    const gate = { signature: sig, shownAt: now };
+    expect(
+      shouldShowFeedback(gate, sig, now + REJECTION_FEEDBACK_COOLDOWN_MS + 1),
+    ).toBe(true);
+  });
+});
+
+describe('finalEdges (zero edges by default + real evidence, #18)', () => {
+  const raw: Edge[] = [
+    {
+      source: APP,
+      target: SCANNER,
+      targetPort: 'scan_codebase',
+      kind: 'call',
+      sites: [{ line: 16 }],
+    },
+  ];
+  const real = aggEdge('atom:a', 'atom:b', raw);
+
+  it('renders nothing when no edges were drawn (D1)', () => {
+    expect(finalEdges([real], baseDesign)).toHaveLength(0);
+  });
+
+  it('renders a drawn edge only when it is a real dependency, carrying its evidence', () => {
+    const d: RecomposedDesign = {
       ...baseDesign,
-      hiddenEdges: [{ source: 'atom:a', target: 'atom:b' }],
       addedEdges: [{ source: 'atom:a', target: 'atom:b' }],
     };
-    const d = onDeleteEdge(base, 'module-edge-atom:a->atom:b', aggKeys);
-    expect(d.hiddenEdges).toEqual([{ source: 'atom:a', target: 'atom:b' }]);
+    const edges = finalEdges([real], d);
+    expect(edges).toHaveLength(1);
+    const e = edges[0];
+    expect(e.id).toBe('manual-edge-atom:a->atom:b');
+    expect(e.label).toBe('真实依赖');
+    const data = e.data as AggregatedEdgeData;
+    expect(data.manual).toBe(false);
+    expect(data.rawEdges).toEqual(raw); // real evidence, not []
+    expect(data.displayLabel).toBe('真实依赖');
+  });
+
+  it('never renders a drawn edge that is not a real dependency', () => {
+    const d: RecomposedDesign = {
+      ...baseDesign,
+      addedEdges: [{ source: 'atom:a', target: 'atom:zzz' }],
+    };
+    expect(finalEdges([real], d)).toHaveLength(0);
+  });
+});
+
+describe('onConnectEdge / onDeleteEdge (#18 simplified)', () => {
+  it('onConnectEdge pushes a new drawn pair', () => {
+    const d = onConnectEdge(baseDesign, 'atom:a', 'atom:b');
+    expect(d.addedEdges).toEqual([{ source: 'atom:a', target: 'atom:b' }]);
+    expect(d.hiddenEdges).toEqual([]); // never written
+  });
+
+  it('onConnectEdge dedupes the same key (drawing twice adds once)', () => {
+    const once = onConnectEdge(baseDesign, 'atom:a', 'atom:b');
+    const twice = onConnectEdge(once, 'atom:a', 'atom:b');
+    expect(twice.addedEdges).toEqual([{ source: 'atom:a', target: 'atom:b' }]);
+  });
+
+  it('onDeleteEdge removes a manual edge from addedEdges', () => {
+    const base: RecomposedDesign = {
+      ...baseDesign,
+      addedEdges: [{ source: 'atom:a', target: 'atom:b' }],
+    };
+    const d = onDeleteEdge(base, 'manual-edge-atom:a->atom:b');
     expect(d.addedEdges).toEqual([]);
   });
 
-  it('connect A->B when hidden + aggregate exists -> unhide', () => {
-    const base: RecomposedDesign = {
-      ...baseDesign,
-      hiddenEdges: [{ source: 'atom:a', target: 'atom:b' }],
-    };
-    const d = onConnectEdge(base, 'atom:a', 'atom:b', aggKeys);
-    expect(d.hiddenEdges).toEqual([]);
-  });
-
-  it('connect A->B with no aggregate -> addedEdges += key, dead hidden cleared', () => {
-    const base: RecomposedDesign = {
-      ...baseDesign,
-      hiddenEdges: [{ source: 'atom:x', target: 'atom:y' }],
-    };
-    const d = onConnectEdge(base, 'atom:x', 'atom:y', aggKeys);
-    expect(d.addedEdges).toEqual([{ source: 'atom:x', target: 'atom:y' }]);
-    expect(d.hiddenEdges).toEqual([]);
-  });
-
-  it('connect a visible aggregate pair -> no-op', () => {
-    const d = onConnectEdge(baseDesign, 'atom:a', 'atom:b', aggKeys);
-    expect(d.addedEdges).toEqual([]);
-    expect(d.hiddenEdges).toEqual([]);
-  });
-
-  it('delete a non-parseable edge id -> no-op', () => {
-    const d = onDeleteEdge(baseDesign, 'edge-0-atom:a->atom:b', aggKeys);
+  it('onDeleteEdge ignores aggregate/module edge ids and writes no hiddenEdges', () => {
+    const d = onDeleteEdge(baseDesign, 'module-edge-atom:a->atom:b');
     expect(d).toEqual(baseDesign);
+    expect(d.hiddenEdges).toEqual([]);
   });
 
-  it('unhide also clears a stale manual entry for the same pair', () => {
-    const base: RecomposedDesign = {
-      ...baseDesign,
-      hiddenEdges: [{ source: 'atom:a', target: 'atom:b' }],
-      addedEdges: [{ source: 'atom:a', target: 'atom:b' }],
-    };
-    const d = onConnectEdge(base, 'atom:a', 'atom:b', aggKeys);
-    expect(d.hiddenEdges).toEqual([]);
-    expect(d.addedEdges).toEqual([]);
+  it('onDeleteEdge ignores a non-parseable id', () => {
+    const d = onDeleteEdge(baseDesign, 'edge-0-atom:a->atom:b');
+    expect(d).toEqual(baseDesign);
   });
 });

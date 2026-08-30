@@ -8,8 +8,10 @@
  */
 import type { XYPosition } from '@xyflow/react';
 import type { FeatureFlowGraph } from '../graphToFeatureFlow';
+import type { Graph } from '../../api/types';
 import { atomMetaById, MODULE_GRID_WIDTH } from './derive';
 import { pruneEdges } from './dragDrop';
+import { checkDependency, computeAggregatedModuleEdges } from './edges';
 import { gridPositions } from '../layout';
 import type { RecomposedDesign, RecomposedModule } from './types';
 
@@ -115,11 +117,16 @@ export function clearDesign(path: string): void {
 /**
  * Make a stored design consistent with the current scan: drop atoms that no
  * longer exist, re-add any orphaned atoms as implicit modules, drop empty
- * modules and dead edge overrides. Keeps valid layout and unsaved edits (#6).
+ * modules and dead edge overrides. Re-validates every `addedEdges` pair against
+ * the real aggregated dependencies and discards non-real ones (issue #18 裁决3:
+ * loading must honour the same draw-to-verify rule as drawing). `hiddenEdges`
+ * is deprecated and cleared on load (裁决4). Keeps valid layout and unsaved
+ * edits (#6).
  */
 export function sanitizeDesign(
   design: RecomposedDesign,
   featureFlow: FeatureFlowGraph,
+  graph: Graph,
 ): RecomposedDesign {
   const atoms = atomMetaById(featureFlow);
   const validAtomIds = new Set(atoms.keys());
@@ -151,5 +158,13 @@ export function sanitizeDesign(
     });
   }
 
-  return pruneEdges({ ...design, modules });
+  // Re-validate drawn edges against the real code dependencies (裁决3): keep
+  // only pairs that actually exist in the aggregated set, discard reversed /
+  // non-existent ones, and stop carrying deprecated hiddenEdges.
+  const aggregated = computeAggregatedModuleEdges(graph, { ...design, modules });
+  const addedEdges = design.addedEdges.filter(
+    (r) => checkDependency(aggregated, r.source, r.target).status === 'real',
+  );
+
+  return pruneEdges({ ...design, modules, addedEdges, hiddenEdges: [] });
 }
