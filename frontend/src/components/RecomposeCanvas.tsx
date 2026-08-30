@@ -179,7 +179,12 @@ function CanvasInner({
   const showFeedback = useCallback((msg: string) => {
     setFeedback(msg);
     if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
-    feedbackTimer.current = setTimeout(() => setFeedback(''), 1800);
+    // Toast stays visible exactly as long as the rejection cooldown suppresses
+    // repeats (§9 Q1), so the two durations can never drift apart.
+    feedbackTimer.current = setTimeout(
+      () => setFeedback(''),
+      REJECTION_FEEDBACK_COOLDOWN_MS,
+    );
   }, []);
 
   // Drag stop: dispatch by node identity (#14). The chip's absolute position
@@ -237,17 +242,10 @@ function CanvasInner({
       if (!c.source || !c.target) return false;
       const result = checkDependency(aggregated, c.source, c.target);
       if (result.status === 'real') return true;
-      const message = rejectionMessage(result, design, c.source, c.target);
+      const message = rejectionMessage(result.status, design, c.source, c.target);
       const signature = `${edgeKey(c.source, c.target)}|${result.status}`;
       const now = Date.now();
-      if (
-        shouldShowFeedback(
-          rejectionGate.current,
-          signature,
-          now,
-          REJECTION_FEEDBACK_COOLDOWN_MS,
-        )
-      ) {
+      if (shouldShowFeedback(rejectionGate.current, signature, now)) {
         rejectionGate.current = { signature, shownAt: now };
         showFeedback(message);
       }

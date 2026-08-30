@@ -134,7 +134,15 @@ export default function App() {
   useEffect(() => {
     if (!featureFlow || !graph) return;
     setRecomposeDesign((d) => {
-      if (d === null) return loadDesign(lastPath) ?? initialDesign(featureFlow);
+      if (d === null) {
+        const loaded = loadDesign(lastPath);
+        // Issue #18 裁决3: the auto-loaded saved design gets the same
+        // draw-to-verify re-validation as the manual 加载 button, so non-real
+        // edges from a pre-#18 save never reach memory (invariant #3).
+        return loaded
+          ? sanitizeDesign(loaded, featureFlow, graph)
+          : initialDesign(featureFlow);
+      }
       return sanitizeDesign(d, featureFlow, graph);
     });
   }, [featureFlow, lastPath, graph]);

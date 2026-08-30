@@ -11,16 +11,29 @@ import {
 } from '../lib/recompose/persistence';
 import { initialDesign } from '../lib/recompose/derive';
 import type { RecomposedDesign } from '../lib/recompose/types';
+import { atomForFile } from '../manifest/featureAtoms';
 
 // Real manifest atoms (issue #11 grouping) — atomForFile resolves only these
 // files, so every fixture edge must use them or the aggregated set is empty.
-const WEB = 'web-api-service'; // app.py / models.py / scanner.py / store.py
-const SCAN = 'codebase-scanning'; // parser/*.py
-const AGG = 'aggregation-orchestration'; // backend/backend/aggregate/{init,main,config,runner,report}.py
-
+// Atom ids are derived from the manifest at runtime (repo test convention:
+// never pin a concrete atom id), so regrouping the manifest does not silently
+// break these fixtures.
 const FILE_WEB = 'backend/backend/app.py';
 const FILE_SCAN = 'parser/_scanner.py';
 const FILE_AGG = 'backend/backend/aggregate/runner.py';
+
+const webAtom = atomForFile(FILE_WEB);
+const scanAtom = atomForFile(FILE_SCAN);
+const aggAtom = atomForFile(FILE_AGG);
+if (!webAtom || !scanAtom || !aggAtom) {
+  throw new Error('issue #18 persistence fixture: files must map to manifest atoms');
+}
+const WEB = webAtom.id;
+const SCAN = scanAtom.id;
+const AGG = aggAtom.id;
+if (WEB === SCAN || SCAN === AGG || WEB === AGG) {
+  throw new Error('issue #18 persistence fixture: fixture files must sit in distinct atoms');
+}
 
 const featureFlow: FeatureFlowGraph = {
   nodes: [

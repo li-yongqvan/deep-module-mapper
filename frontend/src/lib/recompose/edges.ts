@@ -45,6 +45,13 @@ export function parseEdgeId(id: string): ParsedEdgeId | null {
   };
 }
 
+/** Index aggregated edges by their canonical `source->target` key (D2/D12). */
+function indexAggregatedEdges(
+  aggregated: FlowEdge<AggregatedEdgeData>[],
+): Map<string, FlowEdge<AggregatedEdgeData>> {
+  return new Map(aggregated.map((e) => [edgeKey(e.source, e.target), e]));
+}
+
 /** Result of a draw-to-verify dependency check (issue #18, D4/D5). */
 export interface DependencyCheck {
   status: 'real' | 'reversed' | 'none';
@@ -68,7 +75,7 @@ export function checkDependency(
   source: string,
   target: string,
 ): DependencyCheck {
-  const byKey = new Map(aggregated.map((e) => [edgeKey(e.source, e.target), e]));
+  const byKey = indexAggregatedEdges(aggregated);
   const forward = byKey.get(edgeKey(source, target));
   if (forward) return { status: 'real', evidence: forward };
   const backward = byKey.get(edgeKey(target, source));
@@ -78,7 +85,7 @@ export function checkDependency(
 
 /** Rejection feedback text for a non-real dependency (D4/D5, wording fixed). */
 export function rejectionMessage(
-  result: DependencyCheck,
+  status: 'reversed' | 'none',
   design: RecomposedDesign,
   source: string,
   target: string,
@@ -86,7 +93,7 @@ export function rejectionMessage(
   const name = (id: string) => design.modules.find((m) => m.id === id)?.name ?? id;
   const src = name(source);
   const tgt = name(target);
-  if (result.status === 'reversed') return `实际是 ${tgt} 依赖 ${src}，方向反了`;
+  if (status === 'reversed') return `实际是 ${tgt} 依赖 ${src}，方向反了`;
   return `这两个模块之间无任何依赖关系（${src} 的文件里没有任何 import 指向 ${tgt}）`;
 }
 
@@ -148,12 +155,15 @@ export function finalEdges(
   aggregated: FlowEdge<AggregatedEdgeData>[],
   design: RecomposedDesign,
 ): FlowEdge[] {
-  const byKey = new Map(aggregated.map((e) => [edgeKey(e.source, e.target), e]));
+  const byKey = indexAggregatedEdges(aggregated);
   const rendered: FlowEdge[] = [];
   for (const r of design.addedEdges) {
     const agg = byKey.get(edgeKey(r));
     if (!agg || !agg.data) continue; // not a real dependency — never render
     rendered.push({
+      // The `manual-edge-` prefix keeps delete-routing (`parseEdgeId` kind
+      // 'manual') stable; here it means "user-drawn", NOT "no evidence" — the
+      // rendered data below carries the real raw-edge evidence (manual:false).
       id: `manual-edge-${r.source}->${r.target}`,
       source: r.source,
       target: r.target,

@@ -92,7 +92,7 @@ describe('issue #18 real-fixture four-fold verification', () => {
     const result = checkDependency(aggregated, pair!.s, pair!.t);
     expect(result.status).toBe('none');
     expect(result.evidence).toBeUndefined();
-    const msg = rejectionMessage({ status: 'none' }, design, pair!.s, pair!.t);
+    const msg = rejectionMessage('none', design, pair!.s, pair!.t);
     expect(msg).toContain('无任何依赖关系');
     // The rejected pair must not render either.
     const drawn: RecomposedDesign = {
@@ -108,12 +108,7 @@ describe('issue #18 real-fixture four-fold verification', () => {
     const reversed = checkDependency(aggregated, real.target, real.source);
     expect(reversed.status).toBe('reversed');
     expect(reversed.evidence).toBeDefined(); // the backward edge exists as proof
-    const msg = rejectionMessage(
-      { status: 'reversed' },
-      design,
-      real.target,
-      real.source,
-    );
+    const msg = rejectionMessage('reversed', design, real.target, real.source);
     expect(msg).toContain('方向反了');
     // The reversed pair must not render either.
     const drawn: RecomposedDesign = {

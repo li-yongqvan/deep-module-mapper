@@ -13,7 +13,7 @@ import {
   REJECTION_FEEDBACK_COOLDOWN_MS,
 } from '../lib/recompose/edges';
 import type { AggregatedEdgeData } from '../lib/graphToFlow';
-import { type Edge as FlowEdge } from '@xyflow/react';
+import { MarkerType, type Edge as FlowEdge } from '@xyflow/react';
 import { THIRD_PARTY_NODE_ID } from '../lib/graphToFeatureFlow';
 import type { RecomposedDesign } from '../lib/recompose/types';
 // Real self-scan snapshot of deep-module-mapper.
@@ -82,7 +82,7 @@ function aggEdge(
     type: 'labeledEdge',
     label: 'call',
     data: { kinds: [...new Set(rawEdges.map((e) => e.kind))], rawEdges, displayLabel: '依赖', aggregated: true },
-    markerEnd: { type: 'arrowclosed' as never },
+    markerEnd: { type: MarkerType.ArrowClosed },
   };
 }
 
@@ -262,13 +262,13 @@ describe('rejectionMessage (#18 D4/D5 wording)', () => {
 
   it('none: 无任何依赖关系, naming the drawn source/target', () => {
     expect(
-      rejectionMessage({ status: 'none' }, namedDesign, 'mod:scan', 'mod:web'),
+      rejectionMessage('none', namedDesign, 'mod:scan', 'mod:web'),
     ).toBe('这两个模块之间无任何依赖关系（扫描模块 的文件里没有任何 import 指向 Web模块）');
   });
 
   it('reversed: 实际是 B 依赖 A，方向反了', () => {
     expect(
-      rejectionMessage({ status: 'reversed' }, namedDesign, 'mod:scan', 'mod:web'),
+      rejectionMessage('reversed', namedDesign, 'mod:scan', 'mod:web'),
     ).toBe('实际是 Web模块 依赖 扫描模块，方向反了');
   });
 });
