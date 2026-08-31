@@ -36,6 +36,7 @@ wayfinder: map
 - [feature-view-functional-atoms](handoff-issue-8-feature-view-complete.md) — 功能视图已完成（PR #12，2026-08-27）：扫描 deep-module-mapper 自生图 29 文件节点 → 3 中文节点 / 2 边；functional-atom manifest（`frontend/src/manifest/feature-atoms.json`）；噪音默认隐藏；原子下钻成员文件；功能视图默认 + 顶部切换。设计文档 + 合并审计（有条件通过，W1-W3/I1-I5 已落实）+ code-review（无阻塞）+ 决策落档 D1-D8 均已归档。code-review 发现项已修复并 cherry-pick 进 master（`b2cc611`）：抽共享 PortHandle、NODE_WIDTH 统一、'依赖' 单通道 label、Inspector 下钻渲染测试，35/35 测试全绿。
 - [recomposition-layer](handoff-recomposition-layer.md) — 重组视图已完成（PR #14，2026-08-28）：第三视图「重组视图」，模块容器（React Flow 父节点）+ 功能原子 chip（子节点）；原子拖进/拖出模块，单原子自动成隐式模块；模块间依赖 = 自动聚合 ∪ 手动增删；localStorage 持久化（按库路径分 key）+ 重置回 manifest 建议分组；模块 V1 不嵌套；中文名自动派生 + 双击编辑。实测 99 测试全绿、tsc 0、build 成功；发现并修复 2 个真实逻辑 bug（有回归测试）。共同语言补「功能原子」「模块容器」术语。决策 D1-D8 已落档。
 - [ai-aggregation](wayfinder/grilling-decisions/issue-11-ai-aggregation-decisions.md) — AI 聚合已完成（PR #15 S1 + #16 S2-S8，2026-08-28）：聚合主力 = **DeepSeek（OpenAI 兼容）CLI 脚本**（`python -m backend.backend.aggregate <repo>`），质量对拍手写 manifest（真实 e2e accuracy=1.0，11/11）；**本地模型只做学习角色**（best-effort 产自己答案 + 对比云端反思，永不充当权威 manifest）；失败明确报错 + 退出码 + 不写任何 manifest（不回退手工）；digest 轻量方案（路径+imports+端口+docstring，本地 12K/API 40K）；降级明确提示。86 后端测试 + 99 前端测试全绿。spec + 评审（magical-herding-swan 有条件通过）+ 决策 D1-D14 + U1-U6 均已落档。
+- [research-archify-design-reference](research-archify-design-reference.md) — 研究 Archify 设计思路（生成→校验→预览→交付→迭代、typed JSON IR、校验回执、Delta 对比），产出 deep-module-mapper 运行时架构图原型与 7 条落地建议（#18 回执格式、schema 版本化、自动布局等），ticket #20 已关闭。
 
 ## Open frontier
 
