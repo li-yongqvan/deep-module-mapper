@@ -82,12 +82,20 @@ Archify 的 IR 不是「画图的配置」，而是**语义事实**：
 | 我们的模块/路线图 | 当前状态 | 可借鉴的 Archify 模式 | 落地建议 |
 |---|---|---|---|
 | **数据层 / `design-data-schema.md`** | 已有 JSON schema，但版本、字段严格性未固化 | `schema_version` + `additionalProperties: false` + 兼容策略 | 为 graph IR 引入显式 `schema_version`；关闭未知字段；schema 变更走版本升级 |
-| **#18 画线即校验** | 人在画布画线，当场校验真实依赖 | 校验回执格式（code + subject + evidence + supportedFixes） | #18 拒绝提示采用统一回执：规则码、代码证据、允许的修复方式 |
+| **#18 画线即校验** | 人在画布画线，当场校验真实依赖 | 校验回执格式（code + subject + evidence + supportedFixes） | #18 拒绝提示采用统一回执：规则码、代码证据、允许的修复方式。**已注入 `#18` 设计文档 §5.5** |
 | **自动布局（dagre 后续优化）** | naive 网格 | 布局是 renderer 职责，AI/数据层不排坐标 | 自动布局模块与图数据解耦；端口 spread、side contract 可作为布局约束 |
 | **trace path / 画布评审（路线图）** | 未实现 | `compare` 的 Before/Delta/After + 机器回执 | 现实视图 vs 自定义画布对比可采用「Delta 视图」；评审结果用结构化 receipt |
 | **深度分 / 评分** | naive `maxLine/portCount` | `quality_profile` 分档 | 定义「够用」与「展示级」两档阈值，避免追求全绿 |
 | **导出/分享（远期）** | Mermaid/DOT/JSON 已明确不做 | 自包含 HTML + 分享卡片 | 若未来需要汇报层，可复用 Archify 的「单文件 HTML + Share Card」思路，但保持现有 out-of-scope 决策 |
 | **AI 聚合 (#11)** | DeepSeek 权威、Ollama 学习 | 证据纪律、不推断运行时影响 | 聚合结果的 manifest 也可带「证据来源」字段；拒绝降级文件 |
+
+### 与 #18 设计文档的联动
+
+本研究中关于「校验回执格式」的建议，已直接写入进行中的 `#18` 设计文档：
+
+- 位置：`worktree-issue-18-recomposition-edge-check/wayfinder/design-doc-issue-18-recomposition-edge-check.md` **§5.5「校验反馈的 receipt 格式（参考 #20 Archify 研究）」**
+- 内容：定义了 `EdgeCheckReceipt` 接口，把 #18 的「真实依赖 / 无依赖 / 方向反 / L1 拦截」四种场景映射到稳定规则码、`supportedFixes` 和代码证据字段。
+- 意义：#18 实现时可直接采纳该 receipt 结构；未来 Inspector 展示「为什么这条边被拒」、单测断言错误类型、AI 消费校验结果都有了统一契约。
 
 ## Prototype artifacts
 
