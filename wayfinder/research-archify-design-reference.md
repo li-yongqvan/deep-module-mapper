@@ -93,8 +93,8 @@ Archify 的 IR 不是「画图的配置」，而是**语义事实**：
 
 ### A-1. 用 Archify 生成的 deep-module-mapper 运行时架构图
 
-- **JSON 源**：`C:\Users\liyongquan\AppData\Local\Temp\deep-module-mapper.architecture.json`
-- **HTML 产物**：`C:\Users\liyongquan\AppData\Local\Temp\deep-module-mapper.architecture.html`（729 KB，单文件可离线打开）
+- **JSON 源**：`wayfinder/prototypes/archify/deep-module-mapper.architecture.json`
+- **HTML 产物**：`wayfinder/prototypes/archify/deep-module-mapper.architecture.html`（729 KB，单文件可离线打开）
 - **交付回执**：
   - specification SHA-256: `6e78db9768e2be5877236255ee02c78f0d60a4f5d648f968f4243611f5ddec05`
   - artifact SHA-256: `e518f70f78ff2e62afffd15591a1aacda244c585d009cbb933dac602c5dc0e2d`

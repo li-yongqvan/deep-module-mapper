@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Deep Module Mapper 运行时架构",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "scan-path",
+        "label": "扫描主路径",
+        "focus": ["browser", "frontend", "backend", "scanner", "parser", "targetCodebase"],
+        "note": "用户输入代码库路径后，后端扫描并返回图数据给前端渲染。"
+      },
+      {
+        "id": "ai-aggregation",
+        "label": "AI 聚合路径",
+        "focus": ["aggregator", "parser", "deepseek", "ollama"],
+        "note": "CLI 调用 DeepSeek 做权威聚合，Ollama 做本地学习，产出功能原子 manifest。"
+      },
+      {
+        "id": "state-persistence",
+        "label": "状态与持久化",
+        "focus": ["backend", "jobStore", "frontend", "browser"],
+        "note": "后端内存 job 状态，前端重组画布持久化在浏览器本地。"
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "cols": 4,
+    "origin": [40, 40],
+    "cellW": 180,
+    "cellH": 100,
+    "gapX": 70,
+    "gapY": 70
+  },
+  "components": [
+    {
+      "id": "browser",
+      "type": "external",
+      "label": "浏览器",
+      "sublabel": "用户桌面",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "frontend",
+      "type": "frontend",
+      "label": "Frontend",
+      "sublabel": "React + Vite + xyflow",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "backend",
+      "type": "backend",
+      "label": "Backend API",
+      "sublabel": "Starlette / Uvicorn",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "jobStore",
+      "type": "database",
+      "label": "Job Store",
+      "sublabel": "内存任务状态",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "scanner",
+      "type": "backend",
+      "label": "Scanner",
+      "sublabel": "后台扫描线程",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "parser",
+      "type": "backend",
+      "label": "Python Parser",
+      "sublabel": "AST 解析器",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "targetCodebase",
+      "type": "external",
+      "label": "Target Codebase",
+      "sublabel": "被扫描代码库",
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": "aggregator",
+      "type": "backend",
+      "label": "AI Aggregator",
+      "sublabel": "聚合 CLI",
+      "row": 3,
+      "col": 1
+    },
+    {
+      "id": "deepseek",
+      "type": "external",
+      "label": "DeepSeek API",
+      "sublabel": "云端聚合权威",
+      "row": 3,
+      "col": 2
+    },
+    {
+      "id": "ollama",
+      "type": "external",
+      "label": "Ollama",
+      "sublabel": "本地学习模型",
+      "row": 4,
+      "col": 2
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "DMM 运行时",
+      "wraps": ["frontend", "backend", "jobStore", "scanner", "parser", "aggregator"],
+      "pad": 28
+    },
+    {
+      "kind": "region",
+      "label": "外部服务",
+      "wraps": ["browser", "targetCodebase", "deepseek", "ollama"],
+      "pad": 28
+    }
+  ],
+  "connections": [
+    {
+      "from": "browser",
+      "to": "frontend",
+      "label": "HTTP",
+      "labelDy": 24
+    },
+    {
+      "from": "frontend",
+      "to": "backend",
+      "label": "REST API"
+    },
+    {
+      "from": "backend",
+      "to": "jobStore",
+      "label": "job state",
+      "labelDy": 24
+    },
+    {
+      "from": "backend",
+      "to": "scanner",
+      "label": "trigger scan"
+    },
+    {
+      "from": "scanner",
+      "to": "parser",
+      "label": "scan_codebase",
+      "labelDy": 24
+    },
+    {
+      "from": "parser",
+      "to": "targetCodebase",
+      "label": "read .py"
+    },
+    {
+      "from": "aggregator",
+      "to": "parser",
+      "label": "draft",
+      "variant": "dashed"
+    },
+    {
+      "from": "aggregator",
+      "to": "deepseek",
+      "label": "DeepSeek",
+      "variant": "emphasis",
+      "labelAt": [520, 546]
+    },
+    {
+      "from": "aggregator",
+      "to": "ollama",
+      "label": "learn",
+      "variant": "dashed",
+      "labelDy": 47
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "主路径",
+      "items": ["用户通过前端提交代码库路径", "后端异步扫描 AST 提取模块/端口/依赖", "前端用 xyflow 渲染三个视图"]
+    },
+    {
+      "dot": "emerald",
+      "title": "AI 聚合",
+      "items": ["DeepSeek 是聚合唯一权威", "Ollama 只做学习角色，不产权威 manifest", "失败明确报错，绝不写降级文件"]
+    },
+    {
+      "dot": "rose",
+      "title": "当前限制",
+      "items": ["Job Store 为内存状态", "重组画布持久化在浏览器 localStorage", "DAG 布局为 naive 网格，待优化"]
+    }
+  ]
+}
