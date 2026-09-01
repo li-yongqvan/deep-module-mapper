@@ -205,6 +205,51 @@
 - `version` 保持 1（向后兼容读旧设计）。
 - 依据：D4 + 裁决3/裁决4；§2.1 V8/V9。
 
+### 5.5 校验反馈的 receipt 格式（参考 #20 Archify 研究）
+
+> 本小节由 `research-archify-design-reference.md`（ticket #20）注入，建议在 #18 实现时采用结构化校验回执，而非仅抛出人类可读字符串。
+
+**当前方案（§5.2a）**：`isValidConnection` 直接调用 `showFeedback("这两个模块之间无任何依赖关系...")`。对人够用，但不可测试、不可扩展、未来 AI 消费困难。
+
+**推荐格式**：每条校验结论内部表示为一份 receipt：
+
+```typescript
+interface EdgeCheckReceipt {
+  ok: boolean;
+  code: string;           // 稳定规则码，如 "edge/none" / "edge/reversed" / "edge/self-loop"
+  severity: "error" | "warning";
+  subject: {
+    sourceModuleId: string;
+    targetModuleId: string;
+  };
+  evidence?: {
+    expectedDirection?: "forward" | "reverse";
+    sourceFiles?: string[];
+    targetFiles?: string[];
+    rawEdge?: RawEdge;    // 若真实依赖存在，放上证据边
+  };
+  message: string;        // 人类可读摘要
+  supportedFixes: ("reverse" | "remove" | "mark-exception")[];
+}
+```
+
+**对 #18 的映射**：
+
+| 场景 | code | message | supportedFixes |
+|---|---|---|---|
+| 真实依赖 | `edge/real` | （放行，无拒绝消息） | — |
+| 无依赖 | `edge/none` | "这两个模块之间无任何依赖关系" | `["remove"]` |
+| 方向反 | `edge/reversed` | "实际是 B 依赖 A，方向反了" | `["reverse", "remove"]` |
+| 自环 / third-party 作源 | `edge/l1-blocked` | 保持现有 L1 文案 | `["remove"]` |
+| third-party 作 target 且真实 | `edge/real` | 放行（D10） | — |
+
+**落地建议**：
+- `checkDependency` 返回 `EdgeCheckReceipt` 而非 `{ status, evidence }`；
+- `isValidConnection` 把 receipt 传给 `showFeedback(receipt.message)`，并把完整 receipt 写入边数据（便于 Inspector 未来展示"为什么被拒"）；
+- 单测直接断言 receipt.code 与 supportedFixes，避免字符串比较。
+
+**依据**：`research-archify-design-reference.md` §3.3（Archify 校验回执）与 §4 对 #18 的映射建议。
+
 ## §6 关键设计裁决
 
 **【裁决1】校验拦截点 = `isValidConnection`**
