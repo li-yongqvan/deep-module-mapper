@@ -42,12 +42,12 @@ wayfinder: map
 ## Open frontier
 
 暂无 active frontier ticket。#18（重组画布「画线即校验」）已完成（PR #19）并关闭。待办按优先级（2026-08-28 用户确认方向）：
-1. 循环依赖 / 孤儿模块检测
+1. 循环依赖 / 孤儿模块检测 — **已 ticketing** → issue #21（2026-09-01 创建），待设计文档
 2. Trace path（变更影响追踪）
 3. 画布评审端点（云端模型评审重组后的设计）
 4. GitHub 仓库来源（后置）
 
-尚未 ticketing，需统筹方创建。
+其余待办尚未 ticketing，需统筹方创建。
 
 ## Not yet specified
 
