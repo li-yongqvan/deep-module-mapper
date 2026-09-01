@@ -51,11 +51,7 @@ import Inspector, {
 // the Inspector's "删除此边" button.
 import { initialDesign } from './lib/recompose/derive';
 import { loadDesign, sanitizeDesign } from './lib/recompose/persistence';
-import {
-  computeAggregatedModuleEdges,
-  edgeKey,
-  onDeleteEdge as recomposeOnDeleteEdge,
-} from './lib/recompose/edges';
+import { onDeleteEdge as recomposeOnDeleteEdge } from './lib/recompose/edges';
 import type { RecomposedDesign } from './lib/recompose/types';
 
 type ViewMode = 'feature' | 'real' | 'recompose';
@@ -136,29 +132,30 @@ export default function App() {
   // keeps the in-memory design (layout + unsaved edits) and only sanitizes it
   // against the fresh graph.
   useEffect(() => {
-    if (!featureFlow) return;
+    if (!featureFlow || !graph) return;
     setRecomposeDesign((d) => {
-      if (d === null) return loadDesign(lastPath) ?? initialDesign(featureFlow);
-      return sanitizeDesign(d, featureFlow);
+      if (d === null) {
+        const loaded = loadDesign(lastPath);
+        // Issue #18 裁决3: the auto-loaded saved design gets the same
+        // draw-to-verify re-validation as the manual 加载 button, so non-real
+        // edges from a pre-#18 save never reach memory (invariant #3).
+        return loaded
+          ? sanitizeDesign(loaded, featureFlow, graph)
+          : initialDesign(featureFlow);
+      }
+      return sanitizeDesign(d, featureFlow, graph);
     });
-  }, [featureFlow, lastPath]);
+  }, [featureFlow, lastPath, graph]);
 
   // Reset the inspector when switching modes (shared canvas also does this on
   // flowGraph change, but recompose has no flowGraph to key off).
   useEffect(() => setSelection(null), [viewMode]);
 
-  // Inspector "删除此边" routes through the same edge transition table.
-  const handleRecomposeDeleteEdge = useCallback(
-    (edgeId: string) => {
-      setRecomposeDesign((d) => {
-        if (!d || !graph) return d;
-        const aggregated = computeAggregatedModuleEdges(graph, d);
-        const keys = new Set(aggregated.map((e) => edgeKey(e.source, e.target)));
-        return recomposeOnDeleteEdge(d, edgeId, keys);
-      });
-    },
-    [graph],
-  );
+  // Inspector "删除此边" routes through the recompose edge transition table
+  // (only user-drawn edges are ever rendered, so deletion is manual-only, #18).
+  const handleRecomposeDeleteEdge = useCallback((edgeId: string) => {
+    setRecomposeDesign((d) => (d ? recomposeOnDeleteEdge(d, edgeId) : d));
+  }, []);
 
   const handleSubmit = useCallback(
     (path: string) => {

@@ -44,11 +44,15 @@ import {
   type RecomposeFlowNode,
 } from '../lib/recompose/derive';
 import {
+  checkDependency,
   computeAggregatedModuleEdges,
   edgeKey,
   finalEdges,
   onConnectEdge,
   onDeleteEdge,
+  rejectionMessage,
+  REJECTION_FEEDBACK_COOLDOWN_MS,
+  shouldShowFeedback,
 } from '../lib/recompose/edges';
 import {
   applyAtomDrop,
@@ -147,10 +151,8 @@ function CanvasInner({
     () => computeAggregatedModuleEdges(graph, design),
     [graph, design],
   );
-  const aggregateKeys = useMemo(
-    () => new Set(aggregated.map((e) => edgeKey(e.source, e.target))),
-    [aggregated],
-  );
+  // Issue #18 (D1): the canvas renders NO auto edges — only drawn edges that
+  // passed validation, each with its real raw-edge evidence.
   const derivedEdges = useMemo(
     () => finalEdges(aggregated, design),
     [aggregated, design],
@@ -170,10 +172,19 @@ function CanvasInner({
   // Toolbar feedback ("已保存" etc.).
   const [feedback, setFeedback] = useState('');
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // One-shot gate for draw-to-verify rejection toasts (§9 Q1): React Flow may
+  // call `isValidConnection` repeatedly during one drag/hover gesture with the
+  // same pair, so the toast must fire once per (pair, status) per cooldown.
+  const rejectionGate = useRef<{ signature: string; shownAt: number } | null>(null);
   const showFeedback = useCallback((msg: string) => {
     setFeedback(msg);
     if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
-    feedbackTimer.current = setTimeout(() => setFeedback(''), 1800);
+    // Toast stays visible exactly as long as the rejection cooldown suppresses
+    // repeats (§9 Q1), so the two durations can never drift apart.
+    feedbackTimer.current = setTimeout(
+      () => setFeedback(''),
+      REJECTION_FEEDBACK_COOLDOWN_MS,
+    );
   }, []);
 
   // Drag stop: dispatch by node identity (#14). The chip's absolute position
@@ -212,29 +223,47 @@ function CanvasInner({
       if (!conn.source || !conn.target) return;
       const source = conn.source;
       const target = conn.target;
-      onDesignChange((d) =>
-        d ? onConnectEdge(d, source, target, aggregateKeys) : d,
-      );
+      // Validity was already decided by `isValidConnection` (裁决1), so this
+      // only persists the accepted pair.
+      onDesignChange((d) => (d ? onConnectEdge(d, source, target) : d));
     },
-    [onDesignChange, aggregateKeys],
+    [onDesignChange],
   );
 
-  const isValidConnection: IsValidConnection = useCallback((c) => {
-    return c.source !== c.target && c.source !== THIRD_PARTY_NODE_ID;
-  }, []);
+  // Issue #18 draw-to-verify gate (裁决1): validity is decided here, BEFORE
+  // any edge is created. L1 hard rules stay (self-loop / third-party as
+  // source, D7); L2 checks the drawn pair against the real code dependencies
+  // (D4/D5) — real → allow, reversed / nonexistent → reject with a one-shot
+  // feedback toast (the same pair can repeat during one drag gesture, hence
+  // the rejectionGate cooldown, §9 Q1).
+  const isValidConnection: IsValidConnection = useCallback(
+    (c) => {
+      if (c.source === c.target || c.source === THIRD_PARTY_NODE_ID) return false;
+      if (!c.source || !c.target) return false;
+      const result = checkDependency(aggregated, c.source, c.target);
+      if (result.status === 'real') return true;
+      const message = rejectionMessage(result.status, design, c.source, c.target);
+      const signature = `${edgeKey(c.source, c.target)}|${result.status}`;
+      const now = Date.now();
+      if (shouldShowFeedback(rejectionGate.current, signature, now)) {
+        rejectionGate.current = { signature, shownAt: now };
+        showFeedback(message);
+      }
+      return false;
+    },
+    [aggregated, design, showFeedback],
+  );
 
   const handleEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
       for (const ch of changes) {
         if (ch.type === 'remove') {
-          onDesignChange((d) =>
-            d ? onDeleteEdge(d, ch.id, aggregateKeys) : d,
-          );
+          onDesignChange((d) => (d ? onDeleteEdge(d, ch.id) : d));
         }
       }
       onEdgesChange(changes as never);
     },
-    [onDesignChange, onEdgesChange, aggregateKeys],
+    [onDesignChange, onEdgesChange],
   );
 
   const handleNodeClick: NodeMouseHandler<RecomposeFlowNode> = useCallback(
@@ -326,9 +355,9 @@ function CanvasInner({
       showFeedback('无已保存设计');
       return;
     }
-    onDesignChange(sanitizeDesign(loaded, featureFlow));
+    onDesignChange(sanitizeDesign(loaded, featureFlow, graph));
     showFeedback('已加载');
-  }, [path, featureFlow, onDesignChange, showFeedback]);
+  }, [path, featureFlow, graph, onDesignChange, showFeedback]);
 
   const handleReset = useCallback(() => {
     onDesignChange(initialDesign(featureFlow));

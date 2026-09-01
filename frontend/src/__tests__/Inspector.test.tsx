@@ -107,6 +107,44 @@ describe('Inspector', () => {
     expect(screen.getByText(/手动添加的依赖（无底层调用点）/)).toBeInTheDocument();
   });
 
+  it('renders a validated edge (manual:false) with its call-site evidence list (#18)', () => {
+    const selection: EdgeSelection = {
+      type: 'edge',
+      id: 'manual-edge-mod:web->mod:scan',
+      source: 'mod:web',
+      target: 'mod:scan',
+      label: '真实依赖',
+      data: {
+        manual: false,
+        kinds: ['from_import', 'call'],
+        displayLabel: '真实依赖',
+        rawEdges: [
+          {
+            source: 'backend/backend/app.py',
+            target: 'parser/_scanner.py',
+            targetPort: 'scan_codebase',
+            kind: 'from_import',
+            sites: [{ line: 7 }],
+          },
+          {
+            source: 'backend/backend/app.py',
+            target: 'parser/_scanner.py',
+            kind: 'call',
+            sites: [{ line: 42 }],
+          },
+        ],
+      },
+    };
+    render(
+      <Inspector selection={selection} graphDiagnostics={[]} onClose={() => {}} />,
+    );
+    expect(screen.getByText('mod:web → mod:scan')).toBeInTheDocument();
+    // Evidence branch, not the "手动添加" fallback.
+    expect(screen.getByText(/调用点（2 条边）/)).toBeInTheDocument();
+    expect(screen.getByText(/from_import → scan_codebase @7/)).toBeInTheDocument();
+    expect(screen.getByText(/call @42/)).toBeInTheDocument();
+  });
+
   it('shows a delete-edge button when onDeleteEdge is provided and clicks route the edge id (#3)', () => {
     const onDeleteEdge = vi.fn();
     const selection: EdgeSelection = {
