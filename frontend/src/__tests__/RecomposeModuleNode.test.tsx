@@ -14,6 +14,7 @@ function makeData(overrides: Partial<RecomposeModuleData> = {}): RecomposeModule
     memberNames: ['原子甲', '原子乙'],
     score: 'moderate',
     portCount: 3,
+    moduleDiagnostic: null,
     onRename: vi.fn(),
     onSetDescription: vi.fn(),
     onDelete: vi.fn(),
@@ -73,5 +74,27 @@ describe('ModuleNodeBody', () => {
     fireEvent.change(input, { target: { value: '   ' } });
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(data.onRename).not.toHaveBeenCalled();
+  });
+
+  it('shows no diagnostic badge when moduleDiagnostic is null', () => {
+    render(<ModuleNodeBody data={makeData({ moduleDiagnostic: null })} />);
+    expect(screen.queryByText('在环里')).not.toBeInTheDocument();
+    expect(screen.queryByText('孤立')).not.toBeInTheDocument();
+    expect(screen.queryByText('仅连第三方')).not.toBeInTheDocument();
+  });
+
+  it('shows the cycle badge for a module in a cycle', () => {
+    render(<ModuleNodeBody data={makeData({ moduleDiagnostic: 'cycle' })} />);
+    expect(screen.getByText('在环里')).toBeInTheDocument();
+  });
+
+  it('shows the orphan badge for an isolated module', () => {
+    render(<ModuleNodeBody data={makeData({ moduleDiagnostic: 'orphan' })} />);
+    expect(screen.getByText('孤立')).toBeInTheDocument();
+  });
+
+  it('shows the third-party-only badge', () => {
+    render(<ModuleNodeBody data={makeData({ moduleDiagnostic: 'third-party-only' })} />);
+    expect(screen.getByText('仅连第三方')).toBeInTheDocument();
   });
 });

@@ -197,4 +197,116 @@ describe('Inspector', () => {
     expect(screen.getByText('scan(root_path) -> dict')).toBeInTheDocument();
     expect(screen.getByText('moderate')).toBeInTheDocument();
   });
+
+  it('renders cycle finding details with member list and evidence', () => {
+    const selection: RecomposedModuleSelection = {
+      type: 'node',
+      kind: 'recomposeModule',
+      id: 'mod:a',
+      label: 'A',
+      name: 'A',
+      description: '',
+      memberAtomNames: [],
+      memberFileCount: 0,
+      ports: [],
+      score: 'shallow',
+      finding: {
+        code: 'cycle/scc',
+        severity: 'error',
+        subject: { moduleIds: ['mod:a', 'mod:b'] },
+        evidence: {
+          cycleEdges: [
+            {
+              source: 'mod:a',
+              target: 'mod:b',
+              kinds: ['import'],
+              rawEdges: [
+                { source: 'a.py', target: 'b.py', kind: 'import', sites: [{ line: 3 }] },
+              ],
+            },
+          ],
+        },
+        message: 'cycle',
+      },
+    };
+    render(
+      <Inspector selection={selection} graphDiagnostics={[]} onClose={() => {}} />,
+    );
+    expect(screen.getByText('⚠ 循环依赖')).toBeInTheDocument();
+    expect(screen.getByText('mod:a')).toBeInTheDocument();
+    expect(screen.getByText('mod:b')).toBeInTheDocument();
+    expect(screen.getByText(/import @3/)).toBeInTheDocument();
+  });
+
+  it('renders orphan finding details', () => {
+    const selection: RecomposedModuleSelection = {
+      type: 'node',
+      kind: 'recomposeModule',
+      id: 'mod:x',
+      label: 'X',
+      name: 'X',
+      description: '',
+      memberAtomNames: [],
+      memberFileCount: 0,
+      ports: [],
+      score: 'shallow',
+      finding: {
+        code: 'orphan/isolated',
+        severity: 'warning',
+        subject: { moduleIds: ['mod:x'] },
+        message: 'orphan',
+      },
+    };
+    render(
+      <Inspector selection={selection} graphDiagnostics={[]} onClose={() => {}} />,
+    );
+    expect(screen.getByText('⚠ 孤立模块')).toBeInTheDocument();
+    expect(screen.getByText(/与其它模块及外部库都没有任何依赖边/)).toBeInTheDocument();
+  });
+
+  it('renders third-party-only finding details with description fallback', () => {
+    const selection: RecomposedModuleSelection = {
+      type: 'node',
+      kind: 'recomposeModule',
+      id: 'mod:y',
+      label: 'Y',
+      name: 'Y',
+      description: '',
+      memberAtomNames: [],
+      memberFileCount: 0,
+      ports: [],
+      score: 'shallow',
+      finding: {
+        code: 'orphan/third-party-only',
+        severity: 'warning',
+        subject: { moduleIds: ['mod:y'] },
+        evidence: {
+          thirdPartyEdges: [
+            {
+              source: 'mod:y',
+              target: 'ext:third-party',
+              kinds: ['import'],
+              rawEdges: [
+                {
+                  source: 'y.py',
+                  target: 'requests',
+                  kind: 'import',
+                  targetPort: 'requests',
+                  sites: [{ line: 1 }],
+                },
+              ],
+            },
+          ],
+        },
+        message: 'tp',
+      },
+    };
+    render(
+      <Inspector selection={selection} graphDiagnostics={[]} onClose={() => {}} />,
+    );
+    expect(screen.getByText('⚠ 仅连接外部库')).toBeInTheDocument();
+    expect(screen.getByText(/只依赖外部库/)).toBeInTheDocument();
+    expect(screen.getByText(/功能说明：/)).toBeInTheDocument();
+    expect(screen.getAllByText('（未填写接口描述）')).toHaveLength(2);
+  });
 });

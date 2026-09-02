@@ -43,6 +43,7 @@ import {
   initialDesign,
   type RecomposeFlowNode,
 } from '../lib/recompose/derive';
+import { detectModuleFindings } from '../lib/recompose/detect';
 import {
   checkDependency,
   computeAggregatedModuleEdges,
@@ -143,13 +144,17 @@ function CanvasInner({
     [onDesignChange, onSelect, atoms],
   );
 
-  const derivedNodes = useMemo(
-    () => deriveNodes(design, featureFlow, portsByAtom, actions),
-    [design, featureFlow, portsByAtom, actions],
-  );
   const aggregated = useMemo(
     () => computeAggregatedModuleEdges(graph, design),
     [graph, design],
+  );
+  const findings = useMemo(
+    () => detectModuleFindings(aggregated, design),
+    [aggregated, design],
+  );
+  const derivedNodes = useMemo(
+    () => deriveNodes(design, featureFlow, portsByAtom, actions, findings),
+    [design, featureFlow, portsByAtom, actions, findings],
   );
   // Issue #18 (D1): the canvas renders NO auto edges — only drawn edges that
   // passed validation, each with its real raw-edge evidence.
@@ -291,6 +296,7 @@ function CanvasInner({
           memberFileCount,
           ports,
           score,
+          finding: findings.byModule.get(module.id) ?? undefined,
         });
         return;
       }
@@ -322,7 +328,7 @@ function CanvasInner({
         });
       }
     },
-    [design, graph, portsByAtom, atoms, onSelect],
+    [design, graph, portsByAtom, atoms, onSelect, findings],
   );
 
   const handleEdgeClick: EdgeMouseHandler = useCallback(
@@ -364,6 +370,37 @@ function CanvasInner({
     showFeedback('已重置为建议分组');
   }, [featureFlow, onDesignChange, showFeedback]);
 
+  const handleSelectModule = useCallback(
+    (moduleId: string) => {
+      const module = design.modules.find((m) => m.id === moduleId);
+      if (!module) return;
+      const { ports, score } = aggregateInterface(module, portsByAtom);
+      const memberAtomNames = module.atomIds.map((id) => atoms.get(id)?.name ?? id);
+      const memberFileCount = module.atomIds.reduce(
+        (acc, id) => acc + (atoms.get(id)?.files.length ?? 0),
+        0,
+      );
+      onSelect({
+        type: 'node',
+        kind: 'recomposeModule',
+        id: module.id,
+        label: module.name,
+        name: module.name,
+        description: module.description,
+        memberAtomNames,
+        memberFileCount,
+        ports,
+        score,
+        finding: findings.byModule.get(module.id) ?? undefined,
+      });
+      // Center on the module with a smooth animation.
+      window.setTimeout(() => {
+        rf.fitView({ nodes: [{ id: moduleId }], duration: 300 });
+      }, 0);
+    },
+    [design, portsByAtom, atoms, findings, onSelect, rf],
+  );
+
   return (
     <ReactFlow
       nodes={nodes}
@@ -397,6 +434,8 @@ function CanvasInner({
         onLoad={handleLoad}
         onReset={handleReset}
         feedback={feedback}
+        diagnostics={findings}
+        onSelectModule={handleSelectModule}
       />
     </ReactFlow>
   );
