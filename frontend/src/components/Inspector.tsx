@@ -12,6 +12,7 @@ import type { Module, Port, Diagnostic } from '../api/types';
 import type { AggregatedEdgeData } from '../lib/graphToFlow';
 import type { DepthScore } from '../lib/depthScore';
 import { scoreColor } from '../lib/depthScore';
+import type { ModuleFinding } from '../lib/recompose/detect';
 
 export interface ModuleNodeSelection {
   type: 'node';
@@ -56,6 +57,7 @@ export interface RecomposedModuleSelection {
   memberFileCount: number;
   ports: Port[];
   score: DepthScore;
+  finding?: ModuleFinding;
 }
 
 export type NodeSelection =
@@ -178,6 +180,94 @@ function RecomposedModuleDetail({ selection }: { selection: RecomposedModuleSele
             {selection.ports.map((p, i) => (
               <li key={i} style={{ marginBottom: 2 }}>
                 <code style={{ fontSize: 11 }}>{p.signature}</code>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {selection.finding && <FindingDetail finding={selection.finding} />}
+    </div>
+  );
+}
+
+function FindingDetail({ finding }: { finding: ModuleFinding }) {
+  if (finding.code === 'cycle/scc') {
+    return (
+      <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border, #475569)' }}>
+        <p style={{ margin: '4px 0', fontWeight: 600, color: 'var(--warn, #f87171)' }}>
+          ⚠ 循环依赖
+        </p>
+        <p style={{ margin: '4px 0', color: 'var(--text-2, #94a3b8)' }}>
+          以下模块互相构成循环：
+        </p>
+        <ul style={{ margin: '4px 0', paddingLeft: 16 }}>
+          {finding.subject.moduleIds.map((id) => (
+            <li key={id}>{id}</li>
+          ))}
+        </ul>
+        {finding.evidence?.cycleEdges && finding.evidence.cycleEdges.length > 0 && (
+          <>
+            <p style={{ margin: '8px 0 4px' }}>证据（成员之间的依赖边）：</p>
+            {finding.evidence.cycleEdges.map((edge, i) => (
+              <div key={i} style={{ marginBottom: 8 }}>
+                <p style={{ margin: '2px 0', fontSize: 11 }}>
+                  {edge.source} → {edge.target}
+                </p>
+                <ul style={{ margin: '2px 0', paddingLeft: 16 }}>
+                  {edge.rawEdges.map((e, j) => (
+                    <li key={j} style={{ fontSize: 11 }}>
+                      {e.kind}
+                      {e.targetPort ? ` → ${e.targetPort}` : ''} @
+                      {e.sites.map((s) => s.line).join(', ')}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+    );
+  }
+
+  if (finding.code === 'orphan/isolated') {
+    return (
+      <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border, #475569)' }}>
+        <p style={{ margin: '4px 0', fontWeight: 600, color: 'var(--text-2, #94a3b8)' }}>
+          ⚠ 孤立模块
+        </p>
+        <p style={{ margin: '4px 0', color: 'var(--text-2, #94a3b8)' }}>
+          该模块与其它模块及外部库都没有任何依赖边（无入无出），可能是：
+        </p>
+        <ul style={{ margin: '4px 0', paddingLeft: 16, color: 'var(--text-2, #94a3b8)' }}>
+          <li>死代码 / 未使用工具</li>
+          <li>尚未接入主流程的新模块</li>
+          <li>需要人工确认是否保留</li>
+        </ul>
+      </div>
+    );
+  }
+
+  // orphan/third-party-only
+  return (
+    <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border, #475569)' }}>
+      <p style={{ margin: '4px 0', fontWeight: 600, color: 'var(--mid, #fbbf24)' }}>
+        ⚠ 仅连接外部库
+      </p>
+      <p style={{ margin: '4px 0', color: 'var(--text-2, #94a3b8)' }}>
+        该模块只依赖外部库、不被任何其它模块使用。
+      </p>
+      <p style={{ margin: '8px 0 4px' }}>功能说明：</p>
+      <p style={{ margin: '4px 0', color: 'var(--text-2, #94a3b8)' }}>
+        {'（未填写接口描述）'}
+      </p>
+      {finding.evidence?.thirdPartyEdges && finding.evidence.thirdPartyEdges.length > 0 && (
+        <>
+          <p style={{ margin: '8px 0 4px' }}>外部依赖（{finding.evidence.thirdPartyEdges.length}）：</p>
+          <ul style={{ margin: '4px 0', paddingLeft: 16 }}>
+            {finding.evidence.thirdPartyEdges.map((edge, i) => (
+              <li key={i} style={{ fontSize: 11 }}>
+                {edge.rawEdges.map((e) => e.targetPort ?? e.kind).join(', ')}
               </li>
             ))}
           </ul>

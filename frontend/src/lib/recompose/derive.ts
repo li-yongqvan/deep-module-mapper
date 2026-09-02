@@ -14,6 +14,8 @@ import { depthScore, type DepthScore } from '../depthScore';
 import { gridPositions } from '../layout';
 import type { RecomposedDesign, RecomposedModule } from './types';
 import type { ExternalNodeData } from '../graphToFlow';
+import type { ModuleFindings, ModuleDiagnosticLabel } from './detect';
+import { findingLabel } from './detect';
 
 /** Padding inside a module container (around the chip grid). */
 export const PAD = 14;
@@ -52,6 +54,8 @@ export interface RecomposeModuleData {
   memberNames: string[];
   score: DepthScore;
   portCount: number;
+  /** Structural diagnostic badge for issue #21 (cycle / orphan / third-party-only). */
+  moduleDiagnostic: ModuleDiagnosticLabel | null;
   /** Bound rename handler (moduleId captured). */
   onRename: (name: string) => void;
   /** Bound description-edit handler (moduleId captured). */
@@ -212,6 +216,7 @@ export function deriveNodes(
   featureFlow: FeatureFlowGraph,
   portsByAtom: Map<string, Port[]>,
   actions: RecomposeModuleActions,
+  findings?: ModuleFindings,
 ): RecomposeFlowNode[] {
   const atoms = atomMetaById(featureFlow);
   const nodes: RecomposeFlowNode[] = [];
@@ -221,6 +226,10 @@ export function deriveNodes(
     const { ports, score } = aggregateInterface(m, portsByAtom);
     const memberNames = m.atomIds.map((id) => atoms.get(id)?.name ?? id);
     const childPositions = childGridPositions(m.atomIds);
+    const finding = findings?.byModule.get(m.id);
+    const moduleDiagnostic: ModuleDiagnosticLabel | null = finding
+      ? findingLabel(finding.code)
+      : null;
 
     nodes.push({
       id: m.id,
@@ -238,6 +247,7 @@ export function deriveNodes(
         memberNames,
         score,
         portCount: ports.length,
+        moduleDiagnostic,
         onRename: (name: string) => actions.onRename(m.id, name),
         onSetDescription: (description: string) => actions.onSetDescription(m.id, description),
         onDelete: () => actions.onDelete(m.id),

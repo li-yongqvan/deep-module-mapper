@@ -11,6 +11,7 @@ import { Position, type Node, type NodeProps } from '@xyflow/react';
 import { useState, type CSSProperties, type KeyboardEvent } from 'react';
 import type { RecomposeModuleData } from '../lib/recompose/derive';
 import { scoreColor } from '../lib/depthScore';
+import type { ModuleDiagnosticLabel } from '../lib/recompose/detect';
 import PortHandle from './PortHandle';
 
 interface EditableTextProps {
@@ -95,25 +96,65 @@ const headerStyle: CSSProperties = {
   boxSizing: 'border-box',
 };
 
-const containerStyle: CSSProperties = {
-  width: '100%',
-  height: '100%',
-  position: 'relative',
-  borderRadius: 12,
-  border: '2px solid var(--border, #475569)',
-  background: 'rgba(30, 41, 59, 0.55)',
-  color: 'var(--text, #f8fafc)',
-  fontFamily:
-    'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif',
-  boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-  overflow: 'visible',
-};
+function containerStyle(moduleDiagnostic: ModuleDiagnosticLabel | null): CSSProperties {
+  const color =
+    moduleDiagnostic === 'cycle'
+      ? 'var(--warn, #f87171)'
+      : moduleDiagnostic === 'orphan'
+        ? 'var(--text-2, #94a3b8)'
+        : moduleDiagnostic === 'third-party-only'
+          ? 'var(--mid, #fbbf24)'
+          : 'var(--border, #475569)';
+  const style =
+    moduleDiagnostic === 'cycle' ? 'solid' : moduleDiagnostic ? 'dashed' : 'solid';
+  return {
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+    borderRadius: 12,
+    border: `2px ${style} ${color}`,
+    background: 'rgba(30, 41, 59, 0.55)',
+    color: 'var(--text, #f8fafc)',
+    fontFamily:
+      'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+    overflow: 'visible',
+  };
+}
+
+function badgeStyle(moduleDiagnostic: ModuleDiagnosticLabel | null): CSSProperties {
+  const color =
+    moduleDiagnostic === 'cycle'
+      ? 'var(--warn, #f87171)'
+      : moduleDiagnostic === 'orphan'
+        ? 'var(--text-2, #94a3b8)'
+        : 'var(--mid, #fbbf24)';
+  return {
+    fontSize: 9,
+    fontWeight: 600,
+    padding: '1px 5px',
+    borderRadius: 4,
+    background: `${color}22`,
+    color,
+    flexShrink: 0,
+  };
+}
+
+function badgeText(moduleDiagnostic: ModuleDiagnosticLabel | null): string | null {
+  if (moduleDiagnostic === 'cycle') return '在环里';
+  if (moduleDiagnostic === 'orphan') return '孤立';
+  if (moduleDiagnostic === 'third-party-only') return '仅连第三方';
+  return null;
+}
 
 /** Pure presentational module body (no React Flow handles) — jsdom-testable. */
 export function ModuleNodeBody({ data }: { data: RecomposeModuleData }) {
   return (
     <div style={headerStyle} className="recompose-module-node">
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {data.moduleDiagnostic && (
+          <span style={badgeStyle(data.moduleDiagnostic)}>{badgeText(data.moduleDiagnostic)}</span>
+        )}
         <span style={{ fontSize: 10, opacity: 0.7, flexShrink: 0 }}>模块</span>
         <EditableText
           value={data.name}
@@ -169,7 +210,7 @@ const deleteStyle: CSSProperties = {
 
 export default function RecomposeModuleNode({ data }: NodeProps<Node<RecomposeModuleData>>) {
   return (
-    <div style={containerStyle} className="recompose-module">
+    <div style={containerStyle(data.moduleDiagnostic)} className="recompose-module">
       <ModuleNodeBody data={data} />
       <PortHandle type="target" position={Position.Left} />
       <PortHandle type="source" position={Position.Right} />

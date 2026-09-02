@@ -10,6 +10,7 @@ wayfinder: map
 ## Notes
 
 - 当前项目目录：`C:/Users/liyongquan/agent panel/deep-module-mapper/`。
+- **2026-09-01（用户反馈，待独立会话）**：功能视图 / 现实视图的设计可能偏离用户最初想法，或需重新设计。已创建 issue #22 跟踪；计划文档 `wayfinder/plan-issue-22-redesign-real-feature-views.md`。拟单独开会话讨论（用户建议用 handoff 引导）；具体偏离点待用户说明。不阻塞 #21。
 - **GitHub 仓库**：https://github.com/li-yongqvan/deep-module-mapper
 - **Canonical wayfinder map**：GitHub issue #1 — https://github.com/li-yongqvan/deep-module-mapper/issues/1
 - 本地 `wayfinder/*.md` 文件是 GitHub issues 的 mirror/缓存。
@@ -38,14 +39,16 @@ wayfinder: map
 - [ai-aggregation](wayfinder/grilling-decisions/issue-11-ai-aggregation-decisions.md) — AI 聚合已完成（PR #15 S1 + #16 S2-S8，2026-08-28）：聚合主力 = **DeepSeek（OpenAI 兼容）CLI 脚本**（`python -m backend.backend.aggregate <repo>`），质量对拍手写 manifest（真实 e2e accuracy=1.0，11/11）；**本地模型只做学习角色**（best-effort 产自己答案 + 对比云端反思，永不充当权威 manifest）；失败明确报错 + 退出码 + 不写任何 manifest（不回退手工）；digest 轻量方案（路径+imports+端口+docstring，本地 12K/API 40K）；降级明确提示。86 后端测试 + 99 前端测试全绿。spec + 评审（magical-herding-swan 有条件通过）+ 决策 D1-D14 + U1-U6 均已落档。
 - [research-archify-design-reference](research-archify-design-reference.md) — 研究 Archify 设计思路（生成→校验→预览→交付→迭代、typed JSON IR、校验回执、Delta 对比），产出 deep-module-mapper 运行时架构图原型与 7 条落地建议（#18 回执格式、schema 版本化、自动布局等），ticket #20 已关闭。
 - [recomposition-edge-check](design-doc-issue-18-recomposition-edge-check.md) — 重组画布「画线即校验」已完成（PR #19，2026-09-01，mergeCommit 34996a7）：默认零边（D1）、人画线当场校验真依赖（方向+存在性）、真边画上并带 parser 代码证据（D3）、无依赖/方向反拒绝并一次性反馈（D4/D5）；加载旧设计重校验（裁决3）、hiddenEdges 废弃（裁决4）。纯前端，后端零改动。114 前端测试全绿 + tsc 0 错误 + build 成功；review 核验通过。决策确认：`none` 拒绝文案接受实现版、旧设计非真实边静默丢弃（§9 Q2 不做提示）。
+- [module-cycle-orphan-detection](design-doc-issue-21-module-cycle-orphan-detection.md) — 模块级循环依赖/孤儿模块检测**设计文档已评审通过（2026-09-02，可执行基线）**：检测落在**重组视图·模块容器级**（最大粒度，用户确认收窄票面「现实视图」）；依据 = 真实代码聚合边（非用户画的线）；孤儿**三分类**（正常 / 孤儿 / **仅连第三方**·单独高亮+说明功能）；呈现 = **只标节点 + Inspector + 工具栏轻量计数**，不画环边（尊重 #18 零边）、不做画线构成环时提示（#18 交互原样）；不自动改图/一键修复。节点 data 字段定名 `moduleDiagnostic`（避免与 parser `Diagnostic` 混淆），v1 不去抖、不展示环路径。真实 fixture 已实测存在已知 3 原子环 {training-logging, aggregation-orchestration, ai-provider-integration}（默认设计下直接可见）。决策 D1-D5 与 B1 见 `wayfinder/grilling-decisions/issue-21-cycle-orphan-detection-decisions.md`；执行 handoff 见 `handoff-issue-21-module-cycle-orphan-detection.md`。
 
 ## Open frontier
 
 暂无 active frontier ticket。#18（重组画布「画线即校验」）已完成（PR #19）并关闭。待办按优先级（2026-08-28 用户确认方向）：
-1. 循环依赖 / 孤儿模块检测 — **已 ticketing** → issue #21（2026-09-01 创建），待设计文档
-2. Trace path（变更影响追踪）
-3. 画布评审端点（云端模型评审重组后的设计）
-4. GitHub 仓库来源（后置）
+1. 循环依赖 / 孤儿模块检测 — **已 ticketing** → issue #21（2026-09-01 创建）；**设计文档完成（2026-09-01）**，待评审/实现 → `design-doc-issue-21-module-cycle-orphan-detection.md` + `handoff-issue-21-module-cycle-orphan-detection.md`
+2. **现实视图 / 功能视图重设计** — **已 ticketing** → issue #22（2026-09-01 创建），待 grilling 明确偏离点 → `wayfinder/plan-issue-22-redesign-real-feature-views.md`
+3. Trace path（变更影响追踪）
+4. 画布评审端点（云端模型评审重组后的设计）
+5. GitHub 仓库来源（后置）
 
 其余待办尚未 ticketing，需统筹方创建。
 
