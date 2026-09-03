@@ -211,7 +211,8 @@ gh issue view 1 --repo li-yongqvan/deep-module-mapper --json number,title,state
   git tag archive/app-before-skill-migration master
   git push origin archive/app-before-skill-migration
   ```
-- 从干净 master 切出迁移分支：`feature/migrate-to-skill`。
+- 从干净 master 切出迁移分支：`feature/deep-module-review-skill`（执行期由
+  `feature/migrate-to-skill` 改名而来，内容相同）。
 
 ### 5.2 增强 parser：支持 `exclude_dirs`
 

@@ -9,7 +9,7 @@ description: 将 deep-module-mapper 从独立应用迁移为 Claude Code skill `
 
 - **任务**：把 `deep-module-mapper` 从独立 Web 应用降级为 Claude Code skill `/deep-module-review`。
 - **项目路径**：`C:/Users/liyongquan/agent panel/deep-module-mapper/`
-- **分支**：从 `master` 切出 `feature/migrate-to-skill`
+- **分支**：从 `master` 切出 `feature/deep-module-review-skill`
 - **数据时点**：2026-09-02
 - ** handing-off from**：规划/评审会话
 - **执行状态**：尚未开始实现，设计文档与决策已就绪
@@ -49,7 +49,7 @@ git checkout master
 git pull origin master
 git tag archive/app-before-skill-migration master
 git push origin archive/app-before-skill-migration
-git checkout -b feature/migrate-to-skill
+git checkout -b feature/deep-module-review-skill
 ```
 
 ### Step 1：增强 parser（`exclude_dirs`）
@@ -171,7 +171,7 @@ git commit -m "chore: remove frontend and backend applications"
 git add README.md .gitignore wayfinder/
 git commit -m "docs: update README, map, and wayfinder docs for skill migration"
 
-git push origin feature/migrate-to-skill
+git push origin feature/deep-module-review-skill
 ```
 
 **不要合并到 master**，等用户批准后再开 PR/合并。
@@ -185,7 +185,7 @@ git push origin feature/migrate-to-skill
 - [ ] `python .claude/skills/deep-module-review/scripts/analyze.py <repo>` 生成 4 个输出文件。
 - [ ] 在 Claude Code 中调用 `/deep-module-review` 输出包含 SVG 图和中文结论的 Artifact。
 - [ ] 项目根目录仅剩 `parser/`、skill 目录、wayfinder 文档、README、.gitignore。
-- [ ] 分支 `feature/migrate-to-skill` 已推送到 origin。
+- [ ] 分支 `feature/deep-module-review-skill` 已推送到 origin。
 
 ## 红线
 
@@ -201,7 +201,7 @@ git push origin feature/migrate-to-skill
 
 ```
 迁移实现完成。
-- 分支：feature/migrate-to-skill
+- 分支：feature/deep-module-review-skill
 - 提交：<SHA 列表>
 - 测试：parser <结果> / skill <结果> / e2e <结果>
 - 遗留问题：<如有>
