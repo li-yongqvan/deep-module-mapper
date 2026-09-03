@@ -11,9 +11,11 @@ from pathlib import Path
 
 _STDLIB = frozenset(sys.stdlib_module_names)
 
-# D21 (F6): directories that are never scanned.
+# D21 (F6) / #24: directories that are never scanned.
+# `.dagr` added for #24 — local capture sidecar (wayfinder coordination) must
+# never be scanned, whether or not the skill passes an explicit exclude list.
 EXCLUDED_DIRS = frozenset(
-    {".git", "__pycache__", ".venv", "venv", "node_modules", "dist", "build"}
+    {".git", ".dagr", "__pycache__", ".venv", "venv", "node_modules", "dist", "build"}
 )
 
 

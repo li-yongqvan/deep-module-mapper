@@ -15,10 +15,15 @@ from ._external import EXCLUDED_DIRS, build_module_index
 from ._schema import Diagnostic, Edge, ExternalModule, Graph, Module
 
 
-def scan_codebase(root_path: Path) -> dict:
-    """Return a Graph dict matching the schema from issue #2 (5 top-level keys)."""
+def scan_codebase(root_path: Path, exclude_dirs: set[str] | None = None) -> dict:
+    """Return a Graph dict matching the schema from issue #2 (5 top-level keys).
+
+    ``exclude_dirs`` (default None) adds extra directory names (matched at any
+    depth) to the always-excluded ``EXCLUDED_DIRS`` set.  Backward compatible:
+    not passing it behaves exactly as before (invariant 1, #24 design §7).
+    """
     root = Path(root_path).resolve()
-    files = _discover_files(root)
+    files = _discover_files(root, exclude_dirs)
     module_index = build_module_index(files, root)
 
     graph = Graph()
@@ -86,12 +91,17 @@ def _apply(res: _edges.Resolution, graph: Graph, collector: _diagnostics.Collect
         collector.add(Diagnostic("unresolved_symbol", module_id, line, f"unresolved symbol {name!r}"))
 
 
-def _discover_files(root: Path) -> list[Path]:
-    """All ``.py`` files under root, minus excluded directories (D21/F6)."""
+def _discover_files(root: Path, exclude_dirs: set[str] | None = None) -> list[Path]:
+    """All ``.py`` files under root, minus excluded directories (D21/F6, #24).
+
+    Caller-supplied ``exclude_dirs`` names are unioned over the always-excluded
+    ``EXCLUDED_DIRS``; each name matches any directory at any depth.
+    """
     files: list[Path] = []
+    excluded = EXCLUDED_DIRS | set(exclude_dirs or [])
     for path in root.rglob("*.py"):
         rel = path.relative_to(root)
-        if any(part in EXCLUDED_DIRS for part in rel.parts):
+        if any(part in excluded for part in rel.parts):
             continue
         files.append(rel)
     return files
