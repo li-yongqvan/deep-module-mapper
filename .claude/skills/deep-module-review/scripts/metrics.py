@@ -217,13 +217,16 @@ def _external_deps(graph: dict[str, Any]) -> dict[str, list[str]]:
 
     An external dep is an edge whose target is not any scanned module file
     (i.e. not internal and not an ``__init__`` facade -- stdlib is ignored by
-    the parser, so this is third-party/unresolved top-level names).
+    the parser, so this is third-party/unresolved top-level names).  Only
+    production modules are reviewed, so deps of test/fixture modules (which the
+    parser still scans) never count toward the summary.
     """
     module_files = {m["id"] for m in graph["modules"]}
+    prod_ids = {m["id"] for m in graph["modules"] if is_production_module(m["id"])}
     deps: dict[str, set[str]] = {}
     for e in graph.get("edges") or []:
         src, tgt = e.get("source"), e.get("target")
-        if isinstance(src, str) and isinstance(tgt, str) and src in module_files:
+        if isinstance(src, str) and isinstance(tgt, str) and src in prod_ids:
             if tgt not in module_files:
                 deps.setdefault(src, set()).add(tgt)
     return {k: sorted(v) for k, v in deps.items()}
