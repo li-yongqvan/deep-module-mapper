@@ -12,7 +12,7 @@ wayfinder: map
 ## Notes
 
 - 当前项目目录：`C:/Users/liyongquan/agent panel/deep-module-mapper/`。
-- **2026-09-03（方向转型，issue #24，已立项）**：废弃独立 Web 应用路线，改为 Claude Code skill `/deep-module-review`。设计文档已评审（有条件通过，F1–F8 已解决，2026-09-02），执行 handoff 就绪，**待实现**。旧票 #22（现实/功能视图重设计）已关闭——被 #24 取代（skill 形态下这些视图不复存在）。
+- **2026-09-03（方向转型，issue #24，已立项）**：废弃独立 Web 应用路线，改为 Claude Code skill `/deep-module-review`。设计文档已评审（有条件通过，F1–F8 已解决，2026-09-02），执行 handoff 就绪，**待实现**。旧票 #22（现实/功能视图重设计）已关闭——被 #24 取代（skill 形态下这些视图不复存在）。旧票 **#17**（本地助手训练 collect-reflect，源自 #11 S6）也已关停——其依赖的聚合 CLI 被 #24 D6 删除。
 - **GitHub 仓库**：https://github.com/li-yongqvan/deep-module-mapper
 - **Canonical wayfinder map**：GitHub issue #1 — https://github.com/li-yongqvan/deep-module-mapper/issues/1
 - 本地 `wayfinder/*.md` 文件是 GitHub issues 的 mirror/缓存。
