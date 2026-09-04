@@ -119,7 +119,7 @@ description: 将 deep-module-mapper 从独立 Web 应用迁移为 Claude Code sk
 
 ## 先决：v1 之后的 16 项 grilling（2026-09-03）——大部分已被 V2-D1 取代
 
-用户先定了迭代方式（v1 分支为基线、先 grilling 再写设计），随后 16 项决策逐条确认：
+用户先定了迭代方式（v1 分支为基线、先 grilling 再写设计），随后 17 项决策逐条确认：
 多项目通用 / 数据存被监测项目 `.dmm/` / 手输命令快照+对比 / 口述固化基线 / 以 wayfinder 地图为计划 /
 有 ideal 则用无则降级 / AI 读 frontier 逐项估 / HTML 健康面板 / 确定性红+AI 黄 / 首次口述建基线 /
 沿用旧名升级 / v2 仍只 Python / 代码变了才记快照 / 扫描事实当量度 / 仍只读 / 业务粒度+AI 映射 / 单入口分模式。

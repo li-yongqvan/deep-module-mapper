@@ -1,7 +1,7 @@
 > 文档用途：交付专业评审 agent 的评审对象。范围 = 背景 / 真值核对 / 决策记录 / 实现方案 / 不变量 / 验证。
 > 溯源约定：**事实**标来源（代码 `file:line` / DB 实查输出 / GitHub issue / grilling 用户确认）；**判断性裁决**单独标注【决策】并给出理由与备选，不冒充事实。
 > 数据时点：2026-09-02（真值核对执行日）；**v2 增补数据时点：2026-09-04/05**（§11–§18）。
-> 评审状态：v1 已评审通过（有条件通过，F1–F8 已解决，见 §10）并已实现（分支 `feature/deep-module-review-skill`）。**v2 设计已定稿（2026-09-05，原型已验收），见 §11 起。**
+> 评审状态：v1 已评审通过（有条件通过，F1–F8 已解决，见 §10）并已实现（分支 `feature/deep-module-review-skill`）。**v2 设计已评审：有条件通过（2026-09-05，评审意见书 `wayfinder/design-doc-deep-module-review-skill-v2-评审意见书.md`），F1–F8 采纳记录见 §19，通过条件已全部落进设计文本，可进入实现。**
 
 # 迁移 deep-module-mapper 为 Claude Code skill `/deep-module-review` —— 设计文档（供评审）
 
@@ -420,7 +420,7 @@ v1 迁移在本分支实现完毕后，用户试用原型的反馈推动了三�
 
 | 日期 | 事件 | 依据 |
 |---|---|---|
-| 2026-09-03 | v1 基线确认迭代（`feature/deep-module-review-skill` 分支）；16 项 v2 grilling 完成（进度/Delta/理想偏离/增长曲线等监测维度） | grilling 会话 |
+| 2026-09-03 | v1 基线确认迭代（`feature/deep-module-review-skill` 分支）；17 项 v2 grilling 完成（进度/Delta/理想偏离/增长曲线等监测维度） | grilling 会话 |
 | 2026-09-03 | 健康面板原型（7 区块数据面板）被用户否决：**"我不需要这么多数据和趋势。我其实希望它能够产出的就是类似 archify 的图表"** → 数据面板/趋势/指标卡全线废弃，16 项 grilling 中的监测维度随之搁置 | 用户原话 |
 | 2026-09-04 | Archify 渲染链路打通：v1 真实扫描数据 → architecture IR → archify deliver，showcase 档 9/9 检查通过，用户认可生产模块图视觉 | 原型 `dmm.html` |
 | 2026-09-04 | 用户提出下钻需求："点开模块之后，面板应该再增添一个内部功能的循环路线，让我看一下这个模块所宣称的效果是如何实现的" | 用户原话 |
@@ -435,6 +435,8 @@ v1 迁移在本分支实现完毕后，用户试用原型的反馈推动了三�
    - **一句话效果承诺**（这个模块宣称干什么）；
    - **内部 workflow 泳道图**（Archify workflow 图）：节点 = 模块内真实函数，边 = 真实调用，泳道 = AI 给函数分的业务阶段；
    - **AI 解读**：效果如何实现（三两句）+ 循环回路位置说明；函数级环不存在时如实说明循环发生在文件级迭代（原型先例）。
+
+**交付方式**【决策 V2-D11，评审 F7 采纳】：`map.html` 是**浏览器文件**，不是 Claude.ai Artifact——写入 `.last-review/map.html` 后提示用户浏览器打开。理由：Artifact 通道在本环境不可用（无 claude.ai 登录，v1 评审时已实测），且多面板单文件体积（本仓库 7 面板已 ~290KB）不适合塞进 Artifact。规模策略：单文件目标 ≤ 10MB；超出时只对 deep/moderate 模块生成下钻面板，shallow 模块降为纯文字行——该阈值策略记 TODO，实现时按实测调。
 
 **AI 结论在 v2 的位置**【决策 V2-D1】：从 v1 的"Artifact 顶部主结论"降级——总评缩为主图下方一段简短文字，逐模块观点移入下钻面板的解读区。理由：用户明确只要"类似 archify 的图表"，其余信息按需下钻。
 
@@ -461,7 +463,7 @@ v1 迁移在本分支实现完毕后，用户试用原型的反馈推动了三�
 ### 13.2 Archify 现状（依赖与约束）
 
 - 事实：Archify 装于 `~/.claude/skills/archify`（本机），组件 schema 无 click/link 字段，交付 HTML 为静态页（渲染器无事件监听；节点组自带 `data-node-id`/`role="button"`/`tabindex`）→ "点开"交互由 skill 自建 wrapper 实现。
-- 交付命令：`node bin/archify.mjs deliver architecture|workflow <ir.json> <out.html> --quality standard|showcase --json`；workflow 的 IR `schema_version=2`。
+- 交付命令：`node bin/archify.mjs deliver architecture|workflow <ir.json> <out.html> --quality standard|showcase --json`；workflow 的 `schema_version` 枚举为 [1, 2]，原型 IR 用 2。
 - 约束（原型实测）：节点 id 禁前导下划线（`^[a-zA-Z][a-zA-Z0-9_-]*$`）、workflow `col ≤ 5`、同泳道同列节点禁重叠（<8px 间距即报错）、中文字符串经 GBK 控制台需 `subprocess(encoding="utf-8", errors="replace")`。
 
 ### 13.3 原型验证记录（`%TEMP%\dmm_v2_demo\`）
@@ -489,7 +491,18 @@ intra: { <module_id>: { funcs: [{name, line}], calls: [{from, to, line}] } }
 
 - **节点**：模块级 `def`/`async def`（公有+私有）各一节点；**类 = 单节点**（类名），方法不展开（V2-D6）；类方法体内对本模块函数的调用记为类节点的出边。
 - **边**：① 函数体内对同模块其他函数/类的调用；② 模块顶层语句中的调用；③ **回调引用**——函数名以 Name 形式出现在实参位置（如 `sorted(key=f)`）且命中本模块 def（教训 §13.4-1）。
-- **输出位置**【决策 V2-D9】：`scan_codebase` 返回 dict 增加**第 6 个顶层键 `intra`**，`parser/schema.json` 同步更新。理由：一次扫描一处产出，skill 侧直接消费；备选（独立 `intra.json` 文件）被否，因会打破"graph.json = 完整扫描结果"的既有心智。既有 5 键内容与顺序不变（向后兼容）。
+- **输出位置**【决策 V2-D9】：`scan_codebase` 返回 dict 增加**第 6 个顶层键 `intra`**，`parser/schema.json` 同步更新。理由：一次扫描一处产出，skill 侧直接消费；备选（独立 `intra.json` 文件）被否，因会打破"graph.json = 完整扫描结果"的既有心智。既有 5 键的**内容与顺序不变**（扩展实现为纯附加 pass，不动 `resolve_reference` 既有行为）。
+- **契约同步清单**【评审 F1 采纳，实现时逐项执行】：
+  1. `parser/tests/test_scan_codebase.py:22` 的精确 5 键断言**必须同步修改**——改为"既有 5 键内容逐项不变 + `intra` 键存在且形状正确"；这是评审发现的实锤矛盾点，不改则新增键与测试回归二选一。
+  2. `parser/schema.json`：`properties` 增加 `intra`；`intra` **加入 `required`**（本 schema 描述本 parser 的输出，扩展后扫描必产 `intra`）；顶层 `additionalProperties: false` 保持。
+  3. `README.md:31` 与 skill `SKILL.md` 中"5 个顶层键"的书面表述同步改为 6 键。
+  4. 新增 **golden 单测**：扩展前后对同一 fixture 的 5 键输出逐字节一致（把"内容不变"从主张变成可验证断言）。
+- **同名遮蔽消歧**【评审 F2 采纳】——宁缺勿幻，幻边会以"真实调用"误导评审：
+  - 边①③（直接调用与回调引用）：该 Name 在引用点作用域内**未被绑定**才入边——至少排除"在宿主函数内被赋值或作参数名"的同名命中（沿用 `collect_local_names` 的名字并集，按宿主函数过滤）。
+  - **属性调用不入边**：`obj.method()` 中 attr 恰好命中本模块 def 名的情况（如模块有 `def write_text` 则 `out.write_text(...)`）不采信，不画。
+  - 内置名、导入名优先级高于本模块 def 同名命中（import 绑定遮蔽模块级定义）。
+- **归属规则**【评审 F6 采纳】：嵌套 def **并入宿主节点**（不独立成节点，其体内调用记宿主出边）；lambda 体内调用归属宿主；条件分支内的 def 按 `ast.walk` 照常收录；模块级同名重定义（罕见）取首个定义并在 `diagnostics` 记一条，不静默。边②（模块顶层语句调用）**必须入图**——原型曾把顶层整体丢弃（`del funcs["<顶层>"]`），实现不得照抄。
+- **数据形状**：`intra` = `{ <module_id>: {"funcs": [{"name","line"}], "calls": [{"from","to","line"}]} }`（扁平数组，非原型的嵌套 dict）——单测按此形状写。
 - **排除口径**：`intra` 覆盖所有被扫描文件（含 tests/），与 modules 同口径——裁剪是 metrics 层（skill）的职责，parser 不裁（延续现有分层）。
 - **性能**：每模块函数 O(几十)、边 O(几百)，`ast.walk` 线性扫描，无递归深度风险。
 
@@ -505,26 +518,53 @@ analyze.py（不变）
 ```
 
 - **泳道/承诺/解读的来源**：AI（Claude）在运行时读 digest.json + 各模块源码后产出每模块的 workflow IR 片段（lanes/nodes/sublabel/承诺/解读），写入 `.last-review/panels/`，由 assemble.py 组装。SKILL.md 增补该步骤的产出规范。
-- **Archify 依赖策略**【决策 V2-D10】：探测顺序 = 环境变量 `ARCHIFY_DIR` → `~/.claude/skills/archify`；两者皆缺时**降级 v1 `diagram.py` SVG**（无下钻），并在输出中明示"未启用 Archify 模式"。理由：skill 要多项目通用，不能硬依赖另一个 skill；降级保底评审能力不丢。
-- **质量档位**：主图 showcase，验证失败则退 standard 再试（原型先例：爬山布局后 showcase 可达）；内部图 standard。布局：主图由 to_archify.py 内置确定性布局 + 失败时局部搜索（hillclimb 思路）；内部图泳道/列由 AI 标注时给定（列 ≤5、同泳道不同列）。
+- **Archify 依赖策略**【决策 V2-D10，评审 F5 补全契约】：探测顺序 = 环境变量 `ARCHIFY_DIR` → `~/.claude/skills/archify` → **且 `node --version` 可用**（三者任一缺失即降级；目录在而 node 缺失不许走"探测成功→子进程失败"的未定义路径）。降级产物 = **v1 四件套原样**（graph/metrics/digest.json + `diagram.svg` 填 `template.html`），无下钻面板，输出与提示中**明示**"未启用 Archify 模式"。降级不是错误路径，不抛异常、退出码为 0。
+- **模块 id → archify 节点 id 映射**【评审 F3 采纳】：模块 id 形如 `parser/_edges.py`，不满足 archify id pattern（禁 `/` `.` 与前导 `_`）。映射规则：路径确定性拼接——目录段与文件名去扩展名后以 `__` 连接、每段 `_` 前缀剥除（`parser/_edges.py` → `parser__edges`）；**生成后必须查重断言，碰撞即报错**（不静默——`parser/_edges.py` 与假想 `parser/edges.py` 同映射为 `parser__edges` 属于真碰撞，报错优于面板错联）；模块完整原始 id 存入节点 sublabel 或随附映射表，保证面板可溯源。
+- **质量档位与布局**【评审 F4 落 Q5 裁决】：主图 showcase，验证失败退 standard。布局 = to_archify.py 内置确定性布局优先；兜底搜索**固定随机种子**，几何交叉校验在**进程内自实现**（判据：archify 重叠最小间距 8px），兜底搜索阶段不再逐候选 spawn node 子进程，仅对最终布局跑一次 archify validate 确认。**布局结果缓存进 `.last-review/layout.json`**：存在且模块集合未变则直接复用——同仓库两次运行图样一致，前后可对比。内部图泳道/列由 AI 标注时给定（列 ≤5、同泳道不同列）。
+- **样式合并兜底**【评审 F8 采纳】：assemble.py 合并各 deliver 的 `<style>` 块时先做一致性检查——当前实测各块字节级一致、无 `#元素id` 选择器，可安全去重；**不一致时改为全部顺序拼接**（后写覆盖先写）并在生成文件注释里说明该前提，防 archify 升级分化样式时静默失效。所有 node 子进程调用统一走带 `encoding="utf-8", errors="replace"` 的包装器（§13.2 GBK 教训，单测固化）。
 - **红线不变**：全程只读被评审代码；archify 输出与中间 IR 均落 `.last-review/`，不污染用户仓库其他位置。
 
 ## §16 不变量（v2 增量后仍全部成立）
 
 1. 只读评审，不改动被扫描代码。
-2. `scan_codebase` 既有 5 键契约逐字节兼容，新增第 6 键 `intra` 不破坏旧消费方。
+2. `scan_codebase` 既有 5 键**内容不变**（扩展为纯附加 pass）；新增第 6 键 `intra` 按 §14 契约同步清单落地（test_scan_codebase 键断言更新 + schema.json `intra` 入 required + golden 单测验证 5 键逐字节一致）。
 3. parser 零第三方运行时依赖不变（archify 是可选外部增强，进程调用，非 import 依赖）。
-4. 既有 39 parser 测试不回归；扩展新增单测。
+4. 既有 parser 测试断言不回归——唯 `test_scan_codebase.py:22` 的键断言按 §14 契约同步更新（评审 F1 实锤：精确 5 键断言与新增键互斥，必须改）；测试总数随新增单测增长。
 5. 指标口径不变：生产模块范围、深度阈值 50/15、环/孤儿语义均沿用 v1。
 
 ## §17 验证计划
 
-1. **parser 扩展单测**（放 `parser/tests/`，沿用现有 pytest 风格）：函数级提取、类=单节点、回调引用成边、顶层调用、跨模块不误收、`intra` 键形状与 schema 一致。
-2. **to_archify/assemble 单测**（skill 侧）：id sanitize（前导下划线）、col 钳制、面板 id 与 `data-node-id` 映射一致（防 §13.4-2 复发）。
+1. **parser 扩展单测**（放 `parser/tests/`，沿用现有 pytest 风格）：函数级提取、类=单节点、回调引用成边、顶层调用入图、跨模块不误收、`intra` 键形状与 schema 一致、**golden 测试（扩展前后 5 键输出逐字节一致）**、**shadowing 场景**（局部变量/参数与模块函数同名不成幻边、属性调用不入边、import 绑定遮蔽）、归属规则（嵌套 def 并宿主 / lambda / 条件 def / 同名重定义记诊断）。
+2. **to_archify/assemble 单测**（skill 侧）：id 映射 sanitize、**id 碰撞检测断言**、col 钳制、面板 id 与 `data-node-id` 映射一致（防 §13.4-2 复发）、**样式块不一致时改拼接**、**subprocess 包装器编码参数**（防 GBK 回归）。
 3. **端到端**：对本仓库跑 `/deep-module-review` → `map.html` 在浏览器打开 → 点开 7 个面板逐一核对函数/边数与 `intra` 数据一致。
+4. **降级 e2e ×2**【评审 F5 采纳】：模拟 `ARCHIFY_DIR` 指向空目录、模拟 `~/.claude/skills/archify` 不存在——两条路径都应产出 v1 四件套 + 明示降级，退出码 0；另测 node 运行时缺失（PATH 无 node）同走降级。
 
-## §18 v2 待评审焦点（Q3–Q5）
+## §18 开放点裁决（评审后 Q3–Q5 全部关闭）
 
-- **Q3**：archify 缺失时降级 v1 SVG（V2-D10）是否可接受？还是要求 archify 为硬依赖？
-- **Q4**：`intra` 作为 graph.json 第 6 键（V2-D9）是否会破坏其他消费方？（已知消费方：analyze.py、metrics.py、digest.py，均在同仓库可同步改）
-- **Q5**：主图布局"确定性算法优先、搜索兜底"的边界是否清晰？是否需要把布局搜索结果缓存进 `.last-review/` 以稳定两次输出？
+- **Q3 archify 缺失降级**：**裁决 = 可接受，但降级契约写死**（评审方意见采纳）——产物清单、明示机制、node 运行时探测见 §15 V2-D10 补全；降级 e2e 见 §17.4。
+- **Q4 `intra` 第 6 键消费方**：**裁决 = 同仓库内全部可同步改**——消费方清单经评审补全为 analyze.py / metrics.py / digest.py / `test_scan_codebase.py:22` / `parser/schema.json` / `README.md:31` / `SKILL.md`，逐项列入 §14 契约同步清单。
+- **Q5 布局确定性**：**裁决 = 兜底搜索固定 seed + 布局缓存 `.last-review/layout.json` + 进程内几何校验**（见 §15）；"确定性生成"措辞已修正为"确定性布局优先、固定种子搜索兜底、结果缓存"。
+
+## §19 v2 评审意见采纳记录（2026-09-05）
+
+评审对象：本文档 §11–§18 @ `ddb4562`；评审方：独立评审 agent（全新上下文，实测复核）。
+评审结论：**有条件通过**（意见书：`wayfinder/design-doc-deep-module-review-skill-v2-评审意见书.md`）。
+
+| 评审项 | 结论 | 采纳落地 |
+|---|---|---|
+| **F1** V2-D9 兼容面不全：test:22 精确 5 键断言必炸；schema.json `additionalProperties:false` 与 `required` 去留未定；README/SKILL.md"5 键"表述；无 golden 兜底 | 重要，属实 | §14 增"契约同步清单"四项（test 断言改法 / schema `intra` 入 required / README+SKILL.md 表述 / golden 单测）；§16.2/16.4 措辞修正；§17.1 增 golden 项。 |
+| **F2** 回调/属性捕获无同名遮蔽消歧，幻边误导评审；无 shadowing 测试 | 重要，属实 | §14 增"同名遮蔽消歧"：作用域未绑定才入边、属性调用不入边（宁缺勿幻）、import 绑定遮蔽模块 def；§17.1 增 shadowing 场景。 |
+| **F3** 模块 id → archify id 映射未设计，sanitize 可碰撞致面板错联 | 重要，属实 | §15 增映射规则：确定性路径拼接（`parser/_edges.py`→`parser__edges`）+ 生成后查重断言（碰撞报错不静默）+ 原始 id 随图溯源；§17.2 增碰撞测试。 |
+| **F4** "确定性生成"与随机重启爬山矛盾；逐候选 spawn node 不可扩展；两次运行图样不稳 | 重要，属实 | Q5 落裁决（§15/§18）：固定 seed、进程内几何校验（8px 判据）、仅最终布局跑一次 validate、布局缓存 `layout.json`；措辞修正。 |
+| **F5** 降级路径零测试、产物形态未写明、探测不查 node 运行时 | 重要，属实 | §15 V2-D10 补全：探测加 `node --version`；降级产物 = v1 四件套 + 明示，退出码 0；§17.4 增降级 e2e ×3（空 ARCHIFY_DIR / 无 archify 目录 / 无 node）。 |
+| **F6** 归属规则缺口（嵌套 def/lambda/条件 def/重名）；原型丢弃顶层调用、照抄漏边②；数据形状未定 | 建议，采纳 | §14 增"归属规则"表（嵌套并宿主 / lambda 归宿主 / 条件 def 收录 / 重名取首个并记诊断；顶层调用必须入图、明示不得照抄原型）；数据形状定为扁平数组。 |
+| **F7** map.html 实为浏览器文件非 Artifact，转变未明说；单文件体积无上限策略 | 建议，采纳 | §12 增交付方式裁决（V2-D11：写文件+提示浏览器打开，不进 Artifact）+ 规模策略（≤10MB，超出只给 deep/moderate 出面板，阈值记 TODO）。 |
+| **F8** 样式合并无"不一致"兜底；GBK subprocess 处理未固化 | 建议，采纳 | §15 增：样式块不一致时改全部拼接并注明前提；subprocess 统一 utf-8 包装器；§17.2 两项单测固化。 |
+| 2.2-冲突① test:22 与不变量互斥（=F1 实锤） | 属实 | 并入 F1 落地。 |
+| 2.2-冲突② "16 项 grilling"实为 17 项 | 属实 | §11 与 decisions 文件计数均改 17。 |
+| 2.2-冲突③ "逐字节兼容"措辞过强 | 属实 | §16.2 改"内容不变 + golden 单测验证逐字节"。 |
+| 2.3 不可复核（用户原话、试错次数、dmm.html 时点） | 采信落档 | decisions 文件为准；"十余次"改表述以产物为准；dmm.html 时点不改。 |
+
+**推翻项**：无。五项重要发现全部在设计文本内修复，未推翻任何已验收的形态决策（V2-D1~D8）。
+
+**实现顺序约束**（评审结语采纳）：golden 测试与契约同步先行，parser 扩展（§14）最后动——它是唯一影响既有契约的改动。
