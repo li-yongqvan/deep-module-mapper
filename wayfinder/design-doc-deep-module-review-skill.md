@@ -1,7 +1,7 @@
 > 文档用途：交付专业评审 agent 的评审对象。范围 = 背景 / 真值核对 / 决策记录 / 实现方案 / 不变量 / 验证。
 > 溯源约定：**事实**标来源（代码 `file:line` / DB 实查输出 / GitHub issue / grilling 用户确认）；**判断性裁决**单独标注【决策】并给出理由与备选，不冒充事实。
-> 数据时点：2026-09-02（真值核对执行日）。
-> 评审状态：待评审。
+> 数据时点：2026-09-02（真值核对执行日）；**v2 增补数据时点：2026-09-04/05**（§11–§18）。
+> 评审状态：v1 已评审通过（有条件通过，F1–F8 已解决，见 §10）并已实现（分支 `feature/deep-module-review-skill`）。**v2 设计已定稿（2026-09-05，原型已验收），见 §11 起。**
 
 # 迁移 deep-module-mapper 为 Claude Code skill `/deep-module-review` —— 设计文档（供评审）
 
@@ -409,3 +409,122 @@ python .claude/skills/deep-module-review/scripts/analyze.py \
 | **F8** 建议迁移 digest 相关测试 | 建议，采纳 | §5.4 明确同步迁移/改写 `backend/tests/test_aggregate_*.py` 中有价值的 digest 测试到 skill tests。 |
 
 **推翻项**：无。
+
+---
+
+# v2 设计（2026-09-05 定稿）：Archify 模块地图 + 模块内下钻
+
+## §11 v2 方向演变（时间线，全部有据）
+
+v1 迁移在本分支实现完毕后，用户试用原型的反馈推动了三轮收敛：
+
+| 日期 | 事件 | 依据 |
+|---|---|---|
+| 2026-09-03 | v1 基线确认迭代（`feature/deep-module-review-skill` 分支）；16 项 v2 grilling 完成（进度/Delta/理想偏离/增长曲线等监测维度） | grilling 会话 |
+| 2026-09-03 | 健康面板原型（7 区块数据面板）被用户否决：**"我不需要这么多数据和趋势。我其实希望它能够产出的就是类似 archify 的图表"** → 数据面板/趋势/指标卡全线废弃，16 项 grilling 中的监测维度随之搁置 | 用户原话 |
+| 2026-09-04 | Archify 渲染链路打通：v1 真实扫描数据 → architecture IR → archify deliver，showcase 档 9/9 检查通过，用户认可生产模块图视觉 | 原型 `dmm.html` |
+| 2026-09-04 | 用户提出下钻需求："点开模块之后，面板应该再增添一个内部功能的循环路线，让我看一下这个模块所宣称的效果是如何实现的" | 用户原话 |
+| 2026-09-04 | 下钻原型完成（可点击单文件页），id 映射 bug 修复后用户验收：**"对，就是这个效果"** | 原型 `prototype.html`，用户原话（2026-09-05） |
+
+## §12 v2 产品定义
+
+**产出 = 单文件 HTML「模块地图」**（`.last-review/map.html`），自上而下：
+
+1. **主图**：Archify architecture 图（showcase 档），节点 = v1 同口径的生产模块（`metrics.py::is_production_module`），卡片带深度副标签与 `浅`/`扇出偏高` tag，外层 region 边界 = 包。
+2. **下钻面板 ×N**：点主图模块卡片，页面内滑出该模块面板（同页切换，非跳转）：
+   - **一句话效果承诺**（这个模块宣称干什么）；
+   - **内部 workflow 泳道图**（Archify workflow 图）：节点 = 模块内真实函数，边 = 真实调用，泳道 = AI 给函数分的业务阶段；
+   - **AI 解读**：效果如何实现（三两句）+ 循环回路位置说明；函数级环不存在时如实说明循环发生在文件级迭代（原型先例）。
+
+**AI 结论在 v2 的位置**【决策 V2-D1】：从 v1 的"Artifact 顶部主结论"降级——总评缩为主图下方一段简短文字，逐模块观点移入下钻面板的解读区。理由：用户明确只要"类似 archify 的图表"，其余信息按需下钻。
+
+**决策记录**（完整版见 `wayfinder/grilling-decisions/deep-module-review-skill-decisions.md` v2 节）：
+
+| 决策 | 内容 |
+|---|---|
+| V2-D1 | 产出形态 = Archify 式架构图；数据面板/趋势废弃 |
+| V2-D2 | v1 已实现分支作为迭代基线 |
+| V2-D3 | 下钻内容 = 真实调用图为底 + AI 分组/阶段命名标注 |
+| V2-D4 | 内部图版式 = Archify workflow 泳道图 |
+| V2-D5 | 交互 = 单文件 HTML 同页内嵌面板（点卡片展开/切换） |
+| V2-D6 | 捕获粒度 = 函数级（类方法暂不拆） |
+| V2-D7 | 面板内容 = 承诺 + 泳道图 + AI 解读 + 循环说明 |
+| V2-D8 | 2026-09-05 原型验收通过，冻结形态进入实现 |
+
+## §13 v2 真值核对（2026-09-04/05，全部可复现）
+
+### 13.1 parser 现状（扩展的必要性）
+
+- `graph.json` 全部 80 条边中 `call` 类 40 条**全部跨模块**，模块内调用 0 条（实查 `.last-review/graph.json`）。
+- `_edges.py:79` 已遍历 `FunctionDef`，但 `resolve_reference` 只对"解析到其他模块"的引用产生边；本地名命中 `module_defs`/`locals_` 时直接跳过（`_edges.py:307-308`）→ 模块内调用信息在现有管线中**主动丢弃**，必须新增采集。
+
+### 13.2 Archify 现状（依赖与约束）
+
+- 事实：Archify 装于 `~/.claude/skills/archify`（本机），组件 schema 无 click/link 字段，交付 HTML 为静态页（渲染器无事件监听；节点组自带 `data-node-id`/`role="button"`/`tabindex`）→ "点开"交互由 skill 自建 wrapper 实现。
+- 交付命令：`node bin/archify.mjs deliver architecture|workflow <ir.json> <out.html> --quality standard|showcase --json`；workflow 的 IR `schema_version=2`。
+- 约束（原型实测）：节点 id 禁前导下划线（`^[a-zA-Z][a-zA-Z0-9_-]*$`）、workflow `col ≤ 5`、同泳道同列节点禁重叠（<8px 间距即报错）、中文字符串经 GBK 控制台需 `subprocess(encoding="utf-8", errors="replace")`。
+
+### 13.3 原型验证记录（`%TEMP%\dmm_v2_demo\`）
+
+| 产物 | 结果 |
+|---|---|
+| `extract_intra.py` → `intra.json` | 7 模块 42 函数的真实函数级调用图提取成功（AST 原型） |
+| 7 张 workflow 图（standard 档） | 全部 deliver 成功，9/9 检查通过 |
+| 主图（architecture，showcase 档） | 手工布局十余次均卡几何交叉 → `hillclimb.py` 爬山搜索出**零诊断布局**，9/9 通过 |
+| `prototype.html`（271KB 单文件） | 主图 + 7 面板，点击交互验收通过 |
+
+### 13.4 原型教训（进实现要求）
+
+1. **只抓 `Call` 会漏回调引用**：`_schema.py:108` 的 `sorted(key=_edge_sort_key)` 中 `_edge_sort_key` 是传参引用不是调用 → parser 扩展须同时抓"命中本模块 def 的实参 Name 引用"（原型图上该边为手工补注）。
+2. **SVG 内嵌多图须去重内部 id**，但去重正则不能误伤 `data-node-id=` 尾部（原型 bug：`id="([^"]+)"` 把 `data-node-id="main"` 改写成 `"arch-main"`，面板映射失配、点击静默失效；已修为 `(?<=\s)id="..."`）。
+3. **本仓库函数级调用图无环**（7 模块全 DAG）→ "循环路线"的诚实呈现 = 泳道分段表达迭代阶段 + 解读文字说明循环发生在文件级迭代；真实环出现时才高亮。
+
+## §14 parser 扩展设计（v2 唯一的 parser 改动）
+
+**目标输出**：每个模块一份模块内调用图，随 scan 结果一并产出：
+
+```
+intra: { <module_id>: { funcs: [{name, line}], calls: [{from, to, line}] } }
+```
+
+- **节点**：模块级 `def`/`async def`（公有+私有）各一节点；**类 = 单节点**（类名），方法不展开（V2-D6）；类方法体内对本模块函数的调用记为类节点的出边。
+- **边**：① 函数体内对同模块其他函数/类的调用；② 模块顶层语句中的调用；③ **回调引用**——函数名以 Name 形式出现在实参位置（如 `sorted(key=f)`）且命中本模块 def（教训 §13.4-1）。
+- **输出位置**【决策 V2-D9】：`scan_codebase` 返回 dict 增加**第 6 个顶层键 `intra`**，`parser/schema.json` 同步更新。理由：一次扫描一处产出，skill 侧直接消费；备选（独立 `intra.json` 文件）被否，因会打破"graph.json = 完整扫描结果"的既有心智。既有 5 键内容与顺序不变（向后兼容）。
+- **排除口径**：`intra` 覆盖所有被扫描文件（含 tests/），与 modules 同口径——裁剪是 metrics 层（skill）的职责，parser 不裁（延续现有分层）。
+- **性能**：每模块函数 O(几十)、边 O(几百)，`ast.walk` 线性扫描，无递归深度风险。
+
+## §15 渲染管线设计（skill 侧改动）
+
+```
+analyze.py（不变）
+  → metrics.py（不变，仍产 metrics.json / digest.json）
+  → 新 to_archify.py：graph.json + metrics.json → 主图 architecture IR（确定性生成）
+  → archify deliver ×(1 主图 + N 内部图)（外部进程调用，见依赖策略）
+  → 新 assemble.py：摘各 deliver HTML 的 <svg> 与 <style>（内部 id 加前缀去重，§13.4-2），
+      注入下钻面板 DOM 与点击 JS → .last-review/map.html
+```
+
+- **泳道/承诺/解读的来源**：AI（Claude）在运行时读 digest.json + 各模块源码后产出每模块的 workflow IR 片段（lanes/nodes/sublabel/承诺/解读），写入 `.last-review/panels/`，由 assemble.py 组装。SKILL.md 增补该步骤的产出规范。
+- **Archify 依赖策略**【决策 V2-D10】：探测顺序 = 环境变量 `ARCHIFY_DIR` → `~/.claude/skills/archify`；两者皆缺时**降级 v1 `diagram.py` SVG**（无下钻），并在输出中明示"未启用 Archify 模式"。理由：skill 要多项目通用，不能硬依赖另一个 skill；降级保底评审能力不丢。
+- **质量档位**：主图 showcase，验证失败则退 standard 再试（原型先例：爬山布局后 showcase 可达）；内部图 standard。布局：主图由 to_archify.py 内置确定性布局 + 失败时局部搜索（hillclimb 思路）；内部图泳道/列由 AI 标注时给定（列 ≤5、同泳道不同列）。
+- **红线不变**：全程只读被评审代码；archify 输出与中间 IR 均落 `.last-review/`，不污染用户仓库其他位置。
+
+## §16 不变量（v2 增量后仍全部成立）
+
+1. 只读评审，不改动被扫描代码。
+2. `scan_codebase` 既有 5 键契约逐字节兼容，新增第 6 键 `intra` 不破坏旧消费方。
+3. parser 零第三方运行时依赖不变（archify 是可选外部增强，进程调用，非 import 依赖）。
+4. 既有 39 parser 测试不回归；扩展新增单测。
+5. 指标口径不变：生产模块范围、深度阈值 50/15、环/孤儿语义均沿用 v1。
+
+## §17 验证计划
+
+1. **parser 扩展单测**（放 `parser/tests/`，沿用现有 pytest 风格）：函数级提取、类=单节点、回调引用成边、顶层调用、跨模块不误收、`intra` 键形状与 schema 一致。
+2. **to_archify/assemble 单测**（skill 侧）：id sanitize（前导下划线）、col 钳制、面板 id 与 `data-node-id` 映射一致（防 §13.4-2 复发）。
+3. **端到端**：对本仓库跑 `/deep-module-review` → `map.html` 在浏览器打开 → 点开 7 个面板逐一核对函数/边数与 `intra` 数据一致。
+
+## §18 v2 待评审焦点（Q3–Q5）
+
+- **Q3**：archify 缺失时降级 v1 SVG（V2-D10）是否可接受？还是要求 archify 为硬依赖？
+- **Q4**：`intra` 作为 graph.json 第 6 键（V2-D9）是否会破坏其他消费方？（已知消费方：analyze.py、metrics.py、digest.py，均在同仓库可同步改）
+- **Q5**：主图布局"确定性算法优先、搜索兜底"的边界是否清晰？是否需要把布局搜索结果缓存进 `.last-review/` 以稳定两次输出？
