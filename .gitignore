@@ -7,3 +7,6 @@ venv/
 
 # Parser CLI output
 parser/out/
+
+# deep-module-review skill: transient scan output (never committed)
+.claude/skills/deep-module-review/.last-review/

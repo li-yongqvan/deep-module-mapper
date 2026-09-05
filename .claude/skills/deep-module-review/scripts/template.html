@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{REPO}} · 深模块评审</title>
+<style>
+  /* ---- design tokens (light default; dark via media + [data-theme]) ---- */
+  :root {
+    --bg: #f7f7f5;
+    --card: #ffffff;
+    --ink: #1c1917;
+    --muted: #6b7280;
+    --line: #e5e4e0;
+    --good: #059669;      /* deep    */
+    --mid: #d97706;       /* moderate*/
+    --bad: #dc2626;       /* shallow */
+    --ring: #d6d3d1;
+    --shadow: 0 1px 2px rgb(0 0 0 / .05);
+    --radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151310;
+      --card: #1f1c19;
+      --ink: #ece9e3;
+      --muted: #a39f98;
+      --line: #2f2b26;
+      --ring: #3a362f;
+      --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #151310;
+    --card: #1f1c19;
+    --ink: #ece9e3;
+    --muted: #a39f98;
+    --line: #2f2b26;
+    --ring: #3a362f;
+    --shadow: none;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.6 "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 20px 64px; }
+
+  header { padding: 8px 0 18px; border-bottom: 1px solid var(--line); }
+  .kicker {
+    font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; margin: 0 0 6px;
+  }
+  h1 { font-size: 26px; margin: 0 0 4px; line-height: 1.2; overflow-wrap: anywhere; }
+  .stamp { color: var(--muted); font-size: 13px; margin: 0; }
+  .stamp code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+
+  section { margin-top: 26px; }
+  h2 {
+    font-size: 14px; font-weight: 700; letter-spacing: .02em;
+    margin: 0 0 10px; display: flex; align-items: center; gap: 8px;
+  }
+  h2 .tag {
+    font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px;
+    background: var(--ring); color: var(--muted); letter-spacing: .04em;
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px;
+  }
+
+  /* ---- AI conclusions (D5: top of the review, before the diagram) ---- */
+  #conclusions { border-left: 3px solid var(--good); }
+  #conclusions .verdict {
+    font-size: 16px; font-weight: 650; margin: 0 0 12px;
+    padding: 10px 14px; border-radius: 8px;
+    background: color-mix(in srgb, var(--good) 8%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--good) 35%, transparent);
+  }
+  #conclusions h3 { font-size: 14px; margin: 16px 0 6px; }
+  #conclusions ul, #conclusions ol { margin: 6px 0 8px; padding-left: 22px; }
+  #conclusions li { margin: 3px 0; }
+  #conclusions code, .metrics code, .diagram code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px; background: var(--ring); padding: 1px 5px; border-radius: 5px;
+  }
+
+  /* ---- metrics summary ---- */
+  .metric-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px; margin-bottom: 14px;
+  }
+  .metric {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 12px;
+  }
+  .metric .num { font-size: 22px; font-weight: 700; line-height: 1.1; }
+  .metric .lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; }
+  .sw.deep { background: var(--good); } .sw.moderate { background: var(--mid); } .sw.shallow { background: var(--bad); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px;
+    border-radius: 999px; white-space: nowrap;
+  }
+  .b-deep   { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--good); }
+  .b-moderate { background: color-mix(in srgb, var(--mid) 16%, transparent); color: var(--mid); }
+  .b-shallow { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+
+  /* ---- diagram ---- */
+  .diagram-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+  .diagram-scroll svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  .legend-note { font-size: 12px; color: var(--muted); margin: 8px 2px 0; }
+
+  footer { margin-top: 40px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Deep Module Review · 深模块评审</p>
+    <h1>{{REPO}}</h1>
+    <p class="stamp">评审时间 <code>{{TIMESTAMP}}</code> · 只读评审，不改动你的代码</p>
+  </header>
+
+  <main>
+    <section id="conclusions" class="card" aria-label="AI 评审结论">
+      <h2>AI 评审结论 <span class="tag">先看这里</span></h2>
+      {{AI_CONCLUSIONS}}
+    </section>
+
+    <section class="metrics" aria-label="模块指标总览">
+      <h2>模块指标总览</h2>
+      {{SUMMARY_METRICS}}
+    </section>
+
+    <section class="diagram" aria-label="模块架构图">
+      <h2>模块架构图</h2>
+      <div class="diagram-scroll">{{DIAGRAM_SVG}}</div>
+      <p class="legend-note">节点颜色 = 深度评分：<span class="swatch sw deep"></span>deep 深度足 · <span class="swatch sw moderate"></span>moderate 尚可 · <span class="swatch sw shallow"></span>shallow 偏浅（ratio = 最大端口行号 / 端口数）。箭头 = 模块间依赖；左缘色条表示循环/孤儿等诊断。</p>
+    </section>
+  </main>
+
+  <footer>由 Claude Code skill <code>/deep-module-review</code> 生成 · parser/ 只读扫描 · v1 不渲染外部依赖节点</footer>
+</div>
+</body>
+</html>
