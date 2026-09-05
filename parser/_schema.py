@@ -92,22 +92,27 @@ class Diagnostic:
 
 @dataclass
 class Graph:
-    """The full scan result. Serialised to the 5 top-level keys from issue #2."""
+    """The full scan result. Serialised to the issue #2 top-level keys plus
+    the v2 ``intra`` key (#24 §14)."""
 
     modules: list[Module] = field(default_factory=list)
     edges: list[Edge] = field(default_factory=list)
     external_modules: list[ExternalModule] = field(default_factory=list)
     diagnostics: list[Diagnostic] = field(default_factory=list)
+    intra: dict = field(default_factory=dict)  # module_id -> {funcs, calls}
 
     def to_dict(self) -> dict:
         # F1: issue #2 confirms 5 top-level keys. `ports` is a flat list with
         # per-entry moduleId, generated from the same source as the nested lists.
+        # v2 (#24 §14): `intra` is appended as the 6th key; the existing five
+        # keep their order and content (pure additive pass, golden-tested).
         return {
             "modules": [m.to_dict() for m in self.modules],
             "ports": [p.to_dict() | {"moduleId": m.id} for m in self.modules for p in m.ports],
             "edges": [e.to_dict() for e in sorted(self.edges, key=_edge_sort_key)],
             "externalModules": [x.to_dict() for x in sorted(self.external_modules, key=lambda x: x.id)],
             "diagnostics": [d.to_dict() for d in sorted(self.diagnostics, key=lambda d: (d.moduleId, d.line))],
+            "intra": self.intra,
         }
 
 

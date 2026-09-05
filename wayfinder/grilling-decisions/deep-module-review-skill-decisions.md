@@ -112,3 +112,38 @@ description: 将 deep-module-mapper 从独立 Web 应用迁移为 Claude Code sk
 - 评审意见书：`wayfinder/design-doc-deep-module-review-skill-评审意见书.md`（待生成）
 - 执行 handoff：`wayfinder/handoff-deep-module-review-skill.md`（待生成）
 - 项目地图：`wayfinder/map.md`
+
+---
+
+# v2 决策（2026-09-03 → 09-05，Archify 模块地图 + 模块内下钻）
+
+## 先决：v1 之后的 16 项 grilling（2026-09-03）——大部分已被 V2-D1 取代
+
+用户先定了迭代方式（v1 分支为基线、先 grilling 再写设计），随后 17 项决策逐条确认：
+多项目通用 / 数据存被监测项目 `.dmm/` / 手输命令快照+对比 / 口述固化基线 / 以 wayfinder 地图为计划 /
+有 ideal 则用无则降级 / AI 读 frontier 逐项估 / HTML 健康面板 / 确定性红+AI 黄 / 首次口述建基线 /
+沿用旧名升级 / v2 仍只 Python / 代码变了才记快照 / 扫描事实当量度 / 仍只读 / 业务粒度+AI 映射 / 单入口分模式。
+
+**2026-09-03 用户看到健康面板原型后否决数据方向**（原话："我不需要这么多数据和趋势。我其实希望它能够产出的就是类似 archify 的图表"）——上列监测维度（进度对照/Delta/理想偏离/增长曲线/快照机制）**全部搁置**，不进 v2 范围；`.dmm/` 快照等决策随之失效。此记录保留以供未来重拾。
+
+## v2 定案决策
+
+| 编号 | 决策问题 | 定案 | 依据 |
+|---|---|---|---|
+| V2-D1 | v2 产出形态？ | **Archify 式架构图为唯一主产出**，数据面板/趋势/指标卡废弃；AI 文字结论降级（总评缩为图下一段，逐模块观点进下钻面板） | 用户原话（2026-09-03） |
+| V2-D2 | 迭代基线？ | v1 已实现分支 `feature/deep-module-review-skill`（原 feature/migrate-to-skill 改名） | 用户确认"v1 作基线迭代" |
+| V2-D3 | 点开模块后内部图画什么？ | **真实函数调用图为底 + AI 标注**（分组/阶段命名）；不采用纯 AI 解读流程（不可溯源） | 用户选项确认（2026-09-04） |
+| V2-D4 | 内部图版式？ | **Archify workflow 泳道图**：泳道=AI 业务阶段，节点=真实函数，边=真实调用 | 同上 |
+| V2-D5 | 交互形态？ | **单文件 HTML 同页内嵌面板**：主图+全部内部图预渲染内嵌，点卡片展开/切换（否决跳转独立页、点开时才渲染） | 同上 |
+| V2-D6 | parser 模块内捕获粒度？ | **函数级**（每个 def 一节点，顶层+函数间调用都画；类方法暂不拆） | 同上 |
+| V2-D7 | 下钻面板内容？ | **一句话效果承诺 + 内部泳道图 + AI 解读（含循环回路位置说明，回边高亮）** | 同上 |
+| V2-D8 | 原型验收 | 2026-09-05 用户确认"对，就是这个效果" → 冻结形态，进入设计定稿与实现 | 本会话 |
+| V2-D9 | 模块内调用数据放哪？ | `scan_codebase` 返回值新增**第 6 顶层键 `intra`**，schema.json 同步；既有 5 键不动 | 设计文档 §14【决策】 |
+| V2-D10 | Archify 依赖策略？ | 探测 `ARCHIFY_DIR` → `~/.claude/skills/archify`；缺失则降级 v1 diagram.py SVG 并明示未启用 Archify 模式 | 设计文档 §15【决策】 |
+
+## 原型事实存档（2026-09-04/05）
+
+- 原型产物：`%TEMP%\dmm_v2_demo\`（extract_intra.py / hillclimb.py / build_prototype.py / prototype.html）。
+- 主图 showcase 档 9/9 检查通过（爬山搜索出零交叉布局）；7 张内部 workflow 图 standard 档全过。
+- 已修 bug：subprocess GBK 解码；SVG 内部 id 去重正则误伤 `data-node-id`（致点击静默失效）。
+- 本仓库 7 模块函数级调用图**无环**，循环诚实体现为文件级迭代（泳道分段+解读说明）。

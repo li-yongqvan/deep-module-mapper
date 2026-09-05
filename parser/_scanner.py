@@ -10,13 +10,13 @@ import ast
 import tokenize
 from pathlib import Path
 
-from . import _diagnostics, _edges, _external, _ports
+from . import _diagnostics, _edges, _external, _intra, _ports
 from ._external import EXCLUDED_DIRS, build_module_index
 from ._schema import Diagnostic, Edge, ExternalModule, Graph, Module
 
 
 def scan_codebase(root_path: Path, exclude_dirs: set[str] | None = None) -> dict:
-    """Return a Graph dict matching the schema from issue #2 (5 top-level keys).
+    """Return a Graph dict: the 5 issue-#2 keys plus the v2 ``intra`` key (#24 §14).
 
     ``exclude_dirs`` (default None) adds extra directory names (matched at any
     depth) to the always-excluded ``EXCLUDED_DIRS`` set.  Backward compatible:
@@ -49,11 +49,14 @@ def scan_codebase(root_path: Path, exclude_dirs: set[str] | None = None) -> dict
         dir_dotted = _dir_dotted(rel)
         extracted = _ports.extract_ports(tree)
         graph.modules.append(Module(id=module_id, path=module_id, ports=extracted.ports))
+        imports = _edges.collect_imports(tree)
+        # v2 (#24 §14): module-internal call graph -- additive, feeds key 6 only.
+        graph.intra[module_id] = _intra.extract_intra(tree, imports, module_id, collector)
         contexts.append(
             {
                 "dir_dotted": dir_dotted,
                 "tree": tree,
-                "imports": _edges.collect_imports(tree),
+                "imports": imports,
                 "refs": _edges.collect_references(tree),
                 "locals": _edges.collect_local_names(tree),
             }
