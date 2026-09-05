@@ -18,8 +18,16 @@ def graph() -> dict:
 # ---- contract -------------------------------------------------------------
 
 
-def test_five_top_level_keys(graph):
-    assert set(graph.keys()) == {"modules", "ports", "edges", "externalModules", "diagnostics"}
+def test_top_level_keys(graph):
+    # v2 (#24 §14 contract-sync 1): the 5 issue-#2 keys stay (content equality is
+    # pinned byte-for-byte by the golden tests), plus the additive ``intra`` key.
+    assert {"modules", "ports", "edges", "externalModules", "diagnostics"} <= set(graph.keys())
+    assert "intra" in graph
+    assert set(graph["intra"].keys()) == {m["id"] for m in graph["modules"]}
+    for entry in graph["intra"].values():
+        assert set(entry.keys()) == {"funcs", "calls"}
+        assert all(set(f.keys()) == {"name", "line"} for f in entry["funcs"])
+        assert all(set(c.keys()) == {"from", "to", "line"} for c in entry["calls"])
 
 
 def test_serializable(graph):
