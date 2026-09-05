@@ -13,6 +13,7 @@ wayfinder: map
 
 - 当前项目目录：`C:/Users/liyongquan/agent panel/deep-module-mapper/`。
 - **2026-09-03（方向转型，issue #24，已立项）**：废弃独立 Web 应用路线，改为 Claude Code skill `/deep-module-review`。设计文档已评审（有条件通过，F1–F8 已解决，2026-09-02），执行 handoff 就绪，**待实现**。旧票 #22（现实/功能视图重设计）已关闭——被 #24 取代（skill 形态下这些视图不复存在）。旧票 **#17**（本地助手训练 collect-reflect，源自 #11 S6）也已关停——其依赖的聚合 CLI 被 #24 D6 删除。
+- **2026-09-05（#24 部分完成）**：**v1 迁移已合并——PR #25，mergeCommit `4d7e7f6`**（parser `exclude_dirs`；skill `/deep-module-review` 落成；frontend/backend 删除；README/.gitignore 收尾；验证 parser 39 + skill 13 单测、e2e 自扫一致）。**#24 票仍 OPEN**：v2（parser 第 6 键 `intra` + to_archify/assemble → map.html 下钻，本地 7 commits、121 测试全绿）待用户 push 后开**新 PR**（用户 2026-09-05 拍板：先合并 #25、再 push，v2 不并入 #25）。
 - **GitHub 仓库**：https://github.com/li-yongqvan/deep-module-mapper
 - **Canonical wayfinder map**：GitHub issue #1 — https://github.com/li-yongqvan/deep-module-mapper/issues/1
 - 本地 `wayfinder/*.md` 文件是 GitHub issues 的 mirror/缓存。
@@ -25,6 +26,7 @@ wayfinder: map
 
 - **2026-09-03 之前的所有决策均属已废弃的「独立 Web 应用」路线**，作为历史记录保留；自 #24 起以 skill 方向为准。详见下方各条目与 `wayfinder/grilling-decisions/`。
 - [deep-module-review-skill](wayfinder/grilling-decisions/deep-module-review-skill-decisions.md) — **方向转型（issue #24，2026-09-03）**：把 deep-module-mapper 从独立 Web 应用改为 Claude Code skill `/deep-module-review`。D1/D2 形态+名称；D3 输出 HTML Artifact（架构图+AI 结论）；D4 删除重组画布（拖拽/连线），只留 AI 结论+静态图；D5 AI 主动先给结论；D6 删除聚合 CLI（DeepSeek/本地模型），由 Claude 直接评审；D7 v1 图不渲染外部依赖节点（仅 metrics 表汇总）。设计文档 `design-doc-deep-module-review-skill.md` + 评审意见书（有条件通过，F1–F8 已解决）+ handoff 均已归档。**取代 #22。**
+- [deep-module-review-skill 迁移 v1 已合并](wayfinder/grilling-decisions/deep-module-review-skill-decisions.md) — **迁移 v1 完成（PR #25，mergeCommit `4d7e7f6`，2026-09-05）**：parser `exclude_dirs`（向后兼容，默认排除 `.dagr`）；skill `SKILL.md` + `analyze/metrics/digest/diagram.py` + `template.html` + 13 单测落成；`frontend/`、`backend/` 删除（回滚锚点 tag `archive/app-before-skill-migration`）；README/.gitignore 收尾。验证：parser 39 + skill 13 单测全绿、e2e 4 产物齐、自扫本仓库 metrics 与人工核对一致。
 - [research-market-survey](research-market-survey.md) — 市场调研完成；核心 5 项第一版实现，扩展 4 项后续关卡实现，3 项明确不采纳。（历史）
 - [grilling-interface-criteria](grilling-interface-criteria.md) — 第一版接口 = 公开函数/导出符号；描述 = 硬事实 + AI 润色；语言 = Python；HTTP/CLI 形态后续再做。（历史）
 - [prototype-ui-interaction](prototype-ui-interaction.md) — 节点 = 圆角矩形；端口 = 小圆点；现实视图 = 交通灯语义；自定义画布 = 中性灰蓝 + 评审后标红。（历史）
@@ -43,12 +45,12 @@ wayfinder: map
 
 ## Open frontier
 
-- **#24 迁移 deep-module-mapper 为 Claude Code skill `/deep-module-review`**（2026-09-03 立项）— **active**。设计已评审通过（有条件通过，F1–F8 已解决）、handoff 就绪，**待实现** → `design-doc-deep-module-review-skill.md` + `-评审意见书.md` + `grilling-decisions/deep-module-review-skill-decisions.md` + `handoff-deep-module-review-skill.md`。
+- **#24 迁移 deep-module-mapper 为 Claude Code skill `/deep-module-review`**（2026-09-03 立项）— **active（部分完成）**：v1 已合并（PR #25，mergeCommit `4d7e7f6`，2026-09-05）。**剩 v2**：parser 第 6 键 `intra`（模块内调用图）+ `to_archify`/`assemble` v2 管线 → map.html 可下钻模块地图；本地 7 commits（head `5e5f87d`）已验收（121 测试全绿、自扫 map.html 8 面板核验一致），**待用户 push + 开新 PR** → `handoff-deep-module-review-skill-v2.md` + `design-doc-deep-module-review-skill.md` §11–§18。遗留待拍板：①主图 showcase 对多模块依赖簇不可达、本仓库已按评审接受 standard 降级——是否把「standard 为多模块仓库默认预期」写进设计/README；②Artifact 人工渲染待有 claude.ai 登录的会话确认（生成页存本地 `.last-review/review-deep-module-mapper.html`）。
 - 其余：无 active frontier。原「独立 Web 应用」路线待办（#22 现实/功能视图重设计 [已关闭/被 #24 取代]、Trace path、画布评审端点、GitHub 仓库来源）随方向转型废弃；如未来 skill 方向需要再重新评估立项。
 
 ## Not yet specified
 
-- skill 落地细节见 `handoff-deep-module-review-skill.md` 与设计文档 §5/§7/§8（脚本结构、exclude_dirs、测试与验证计划等）——已设计，待实现核验。
+- skill v1 落地细节已核验合并（PR #25）；v2 管线（`intra`、to_archify/assemble、验证计划）见 `handoff-deep-module-review-skill-v2.md` 与设计文档 §11–§18——已实现待并入。
 - 原「独立 Web 应用」路线的未定项（数据持久化、启动方式、界面交互、后续关卡功能、GitHub 仓库来源等）**随方向转型废弃**，不再开放。
 
 ## Out of scope
