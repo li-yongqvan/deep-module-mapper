@@ -16,7 +16,9 @@ description: 对任意 Python 代码库做「深模块评审」。当用户完�
 ## 触发与用法
 
 - 触发：用户输入 `/deep-module-review [path]`；`path` 省略时评审当前工作目录。
-- 依赖：`scripts/analyze.py` 依赖同仓库根下的 `parser/` 包（会自行向上定位）；
+- 依赖：`scripts/analyze.py` 依赖 `parser/` 包，定位顺序 = 环境变量
+  `DEEP_MODULE_MAPPER_ROOT` → 从脚本向上找 → 兄弟目录 `deep-module-mapper/`
+  （skill 安装在 agent panel 等仓库外位置时，靠兄弟目录或环境变量找到 parser）；
   v2 渲染额外依赖 [Archify](file://~/.claude/skills/archify) + node（自动探测，
   见第 1 步的 `archify` 字段）。
 

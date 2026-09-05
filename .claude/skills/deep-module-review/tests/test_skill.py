@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+import analyze
 import digest as digest_mod
 import diagram
 import metrics
@@ -256,3 +257,47 @@ class TestIntegrationWithParser:
         assert set(ids) == {"core.py", "main.py", "utils.py"}  # __init__ excluded
         by_pair = {(e["source"], e["target"]) for e in m["aggregatedEdges"]}
         assert by_pair == {("main.py", "core.py"), ("main.py", "utils.py")}
+
+
+# --- repo-root discovery (skill portability, 2026-09-05) ----------------------
+class TestFindRepoRoot:
+    """analyze._find_repo_root: env override → walk-up → sibling deep-module-mapper/."""
+
+    @staticmethod
+    def _mk_repo(root: Path) -> Path:
+        (root / "parser").mkdir(parents=True)
+        (root / "parser" / "_scanner.py").write_text("# stub", encoding="utf-8")
+        return root
+
+    def test_walk_up_finds_owning_repo(self, tmp_path):
+        repo = self._mk_repo(tmp_path / "repo")
+        start = repo / ".claude" / "skills" / "deep-module-review" / "scripts"
+        start.mkdir(parents=True)
+        assert analyze._find_repo_root(start) == repo
+
+    def test_sibling_deep_module_mapper_resolves(self, tmp_path):
+        repo = self._mk_repo(tmp_path / "deep-module-mapper")
+        start = tmp_path / ".claude" / "skills" / "deep-module-review" / "scripts"
+        start.mkdir(parents=True)
+        assert analyze._find_repo_root(start) == repo
+
+    def test_env_override_wins_over_walk_up(self, tmp_path, monkeypatch):
+        env_repo = self._mk_repo(tmp_path / "env-repo")
+        walk_repo = self._mk_repo(tmp_path / "walk" / "repo")
+        start = walk_repo / "scripts"
+        start.mkdir(parents=True)
+        monkeypatch.setenv("DEEP_MODULE_MAPPER_ROOT", str(env_repo))
+        assert analyze._find_repo_root(start) == env_repo
+
+    def test_env_override_must_own_parser(self, tmp_path, monkeypatch):
+        self._mk_repo(tmp_path / "repo")
+        start = tmp_path / "repo" / "scripts"
+        start.mkdir(parents=True)
+        monkeypatch.setenv("DEEP_MODULE_MAPPER_ROOT", str(tmp_path / "nonexistent"))
+        assert analyze._find_repo_root(start) == tmp_path / "repo"  # falls through
+
+    def test_missing_everywhere_raises(self, tmp_path):
+        start = tmp_path / "scripts"
+        start.mkdir()
+        with pytest.raises(RuntimeError, match="DEEP_MODULE_MAPPER_ROOT"):
+            analyze._find_repo_root(start)

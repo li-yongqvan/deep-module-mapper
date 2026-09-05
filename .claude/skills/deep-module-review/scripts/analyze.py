@@ -5,8 +5,9 @@ Usage (from anywhere)::
     python .claude/skills/deep-module-review/scripts/analyze.py [repo]
 
 ``repo`` defaults to the current working directory.  Locates the ``parser``
-package by walking up from this script's location, adds that repo root to
-``sys.path``, scans ``repo`` (excluding tooling directories), computes metrics,
+package (env ``DEEP_MODULE_MAPPER_ROOT`` → walk up from this script → sibling
+``deep-module-mapper/`` directory), adds that repo root to ``sys.path``, scans
+``repo`` (excluding tooling directories), computes metrics,
 digest and the architecture SVG, and writes them under
 ``.claude/skills/deep-module-review/.last-review/``:
 
@@ -29,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -54,14 +56,36 @@ EXCLUDE_DIRS = {
 OUTPUT_DIR = Path(__file__).resolve().parent.parent / ".last-review"
 
 
+def _owns_parser(candidate: Path) -> bool:
+    return (candidate / "parser" / "_scanner.py").is_file()
+
+
 def _find_repo_root(start: Path) -> Path:
-    """Walk up from ``start`` to the directory that owns ``parser/``."""
+    """Locate the directory that owns ``parser/``.
+
+    Resolution order (skill portability, 2026-09-05 — the skill may be
+    installed standalone outside the deep-module-mapper repo):
+
+    1. ``DEEP_MODULE_MAPPER_ROOT`` env override (explicit config wins).
+    2. Walk up from ``start`` — the skill installed inside the repo
+       (``.claude/skills/deep-module-review`` under the repo root).
+    3. Sibling ``deep-module-mapper/`` directory next to any ancestor of
+       ``start`` — the skill installed elsewhere (e.g. ``agent panel/.claude``)
+       with the repo checked out alongside.
+    """
+    env = os.environ.get("DEEP_MODULE_MAPPER_ROOT")
+    if env and _owns_parser(Path(env)):
+        return Path(env)
     for candidate in [start, *start.parents]:
-        if (candidate / "parser" / "_scanner.py").is_file():
+        if _owns_parser(candidate):
             return candidate
+    for ancestor in [start, *start.parents]:
+        if _owns_parser(ancestor / "deep-module-mapper"):
+            return ancestor / "deep-module-mapper"
     raise RuntimeError(
-        "Could not locate the deep-module-mapper repo root (parser/_scanner.py) "
-        "above " + str(start)
+        "Could not locate the deep-module-mapper repo root (parser/_scanner.py): "
+        f"no ancestor of {start} owns parser/, and no sibling deep-module-mapper/ "
+        "was found. Set DEEP_MODULE_MAPPER_ROOT to the repo root."
     )
 
 
