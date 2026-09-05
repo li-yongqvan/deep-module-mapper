@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 import archify_env
+import assemble
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
@@ -133,6 +134,21 @@ class TestFullPipeline:
             }
             ir_edges = {(e["from"], e["to"]) for e in ir["edges"]}
             assert expected_edges <= ir_edges, module_id
+
+    def test_map_html_style_matches_raw_deliver(self, v2_outputs):
+        # Regression for the all-black map incident: a list-shaped styles value
+        # was repr'd by str.format (literal \n escapes + [' '] cruft), silently
+        # corrupting the archify theme CSS.  When deduped, the merged style in
+        # map.html must be byte-identical to the raw deliver's style block.
+        out = v2_outputs["assemble"]
+        assert out["styleMode"] == "deduped"
+        map_html = Path(out["map"]).read_text(encoding="utf-8")
+        first_panel = next(iter(v2_outputs["idmap"].values()))
+        panel_html = (Path(v2_outputs["dir"]) / "panels" / f"{first_panel}.html").read_text(encoding="utf-8")
+        map_style = assemble.extract_style_blocks(map_html)[0]
+        raw_style = assemble.extract_style_blocks(panel_html)[0]
+        assert isinstance(map_style, str)
+        assert map_style == raw_style
 
     def test_layout_cache_reused_on_second_run(self, v2_outputs):
         last_review = Path(v2_outputs["dir"])

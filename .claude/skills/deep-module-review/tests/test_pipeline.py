@@ -239,6 +239,21 @@ class TestAssembleExtraction:
         assert merged.index("<style>a") < merged.index("<style>b")
         assert "F8" in merged  # premise note present
 
+    def test_merge_styles_flattens_stray_nesting(self):
+        # Production once passed [[[block]], [[block]]]: flat[0] was a *list*,
+        # so str.format repr'd it -- literal "\n" escapes + [' '] cruft that
+        # silently broke the archify theme CSS (the all-black map incident).
+        # Whatever the nesting, this must come back as a plain string.
+        block = "<style>a{}</style>"
+        merged, mode = assemble.merge_styles([[[block]], [[block]]])
+        assert mode == "deduped"
+        assert merged == block
+        assert isinstance(merged, str)
+
+    def test_merge_styles_rejects_non_string_blocks(self):
+        with pytest.raises(TypeError):
+            assemble.merge_styles([["<style>a{}</style>", 42]])
+
     def test_unique_ids_leaves_data_node_id_alone(self):
         svg = '<g id="node-1" data-node-id="main"><use href="#dot"/><title>aria</title></g>'
         out = assemble.unique_ids(svg, "arch")

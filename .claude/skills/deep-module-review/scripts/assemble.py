@@ -205,8 +205,13 @@ def unique_ids(svg: str, prefix: str) -> str:
 def merge_styles(per_deliver: list[list[str]]) -> tuple[str, str]:
     """Dedupe when every deliver agrees byte-for-byte; otherwise concat (F8)."""
     flat = [s for blocks in per_deliver for s in blocks]
-    if not flat:
-        return "", ""
+    # Tolerate one stray nesting level (a single-block list where a bare block
+    # was expected).  Without this, a list element flows into str.format and is
+    # repr'd -- newlines become literal "\n" and the CSS silently breaks (seen
+    # as an all-black diagram once the archify theme variables stop resolving).
+    flat = [x for s in flat for x in (s if isinstance(s, list) else [s])]
+    if not flat or not all(isinstance(s, str) for s in flat):
+        raise TypeError(f"merge_styles expected style-block strings, got {flat!r}")
     first = flat[0]
     if all(block == first for block in flat):
         return first, "deduped"
@@ -309,7 +314,10 @@ def run(last_review: Path) -> dict[str, Any]:
 
     panels_dir = last_review / "panels"
     specs = sorted(panels_dir.glob("*.json")) if panels_dir.is_dir() else []
-    specs = [p for p in specs if p.name != "_summary.json"]
+    # Exclude our own intermediates/verdict: re-running assemble must not pick
+    # up the *.workflow.json IRs it wrote last time as if they were specs.
+    specs = [p for p in specs
+             if p.name != "_summary.json" and not p.name.endswith(".workflow.json")]
     if not specs:
         print(json.dumps({"ok": False, "error": f"no panel specs in {panels_dir} "
                           "(SKILL.md step: AI writes panels/*.json first)"}, ensure_ascii=False))
@@ -334,13 +342,13 @@ def run(last_review: Path) -> dict[str, Any]:
                          main_html_path, "architecture",
                          architecture.get("meta", {}).get("quality_profile") or "showcase")
     main_html = main_html_path.read_text(encoding="utf-8")
-    style_blocks = [extract_style_blocks(main_html)]
+    all_styles: list[str] = extract_style_blocks(main_html)
     main_svg = unique_ids(extract_svg(main_html), "arch")
 
     # ---- panels ---------------------------------------------------------------
     comp_order = {c["id"]: (c.get("row", 0), c.get("col", 0))
                   for c in architecture.get("components", [])}
-    sections, panel_styles, panel_ids = [], [], []
+    sections, panel_ids = [], []
     for module_id in sorted(idmap, key=lambda m: comp_order.get(idmap[m], (0, 0))):
         short = idmap[module_id]
         spec = json.loads((panels_dir / by_module[module_id][0]).read_text(encoding="utf-8"))
@@ -354,14 +362,14 @@ def run(last_review: Path) -> dict[str, Any]:
         out_html = panels_dir / f"{short}.html"
         validate_and_deliver(archify_dir, ir, ir_path, out_html, "workflow", WORKFLOW_QUALITY)
         panel_html = out_html.read_text(encoding="utf-8")
-        panel_styles.append(extract_style_blocks(panel_html))
+        all_styles.extend(extract_style_blocks(panel_html))
         svg = unique_ids(extract_svg(panel_html), f"w-{short}")
         sections.append(panel_section(short, spec, svg))
         panel_ids.append(short)
 
     assert_panel_mapping(main_svg, panel_ids)
 
-    merged, style_mode = merge_styles([style_blocks, panel_styles])
+    merged, style_mode = merge_styles([all_styles])
 
     summary_html = ""
     summary_path = panels_dir / "_summary.json"
