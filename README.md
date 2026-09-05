@@ -51,6 +51,10 @@ parser/scan_codebase(仓库, exclude_dirs=…)
 - v1/v2 图均不渲染外部依赖节点（D7），第三方依赖只在 metrics 汇总。
 - Archify 依赖探测：`ARCHIFY_DIR` → `~/.claude/skills/archify` → `node --version`；
   任一缺失即降级 v1 四件套并明示（退出码 0，不是错误）。
+- 主图质量档位：先验 showcase、不过降 standard（单次降档）。**多模块仓库
+  （依赖成簇）默认预期即 standard**——正交路由器障碍感知，密集依赖簇实测过不了
+  showcase 检查；只影响主图连线观感，不影响图内数据正确性；下钻面板固定
+  standard，不受主图档位影响。
 
 ## 脚本
 

@@ -13,7 +13,7 @@ wayfinder: map
 
 - 当前项目目录：`C:/Users/liyongquan/agent panel/deep-module-mapper/`。
 - **2026-09-03（方向转型，issue #24，已立项）**：废弃独立 Web 应用路线，改为 Claude Code skill `/deep-module-review`。设计文档已评审（有条件通过，F1–F8 已解决，2026-09-02），执行 handoff 就绪，**待实现**。旧票 #22（现实/功能视图重设计）已关闭——被 #24 取代（skill 形态下这些视图不复存在）。旧票 **#17**（本地助手训练 collect-reflect，源自 #11 S6）也已关停——其依赖的聚合 CLI 被 #24 D6 删除。
-- **2026-09-05（#24 完成）**：**v1 迁移已合并——PR #25，mergeCommit `4d7e7f6`**（parser `exclude_dirs`；skill `/deep-module-review` 落成；frontend/backend 删除；README/.gitignore 收尾）。**v2 已合并——PR #26，mergeCommit `f73caf4`**（parser 第 6 键 `intra` + to_archify/assemble v2 管线 → map.html 可下钻模块地图；10 commits、22 文件 +7201/−95；121 测试全绿、golden 5 键逐字节一致、自扫 8 面板核验一致、降级 e2e ×3）。**issue #24 已随 PR #26 `Closes #24` 自动关闭——#24 全票完成。** 遗留待拍板项见 Open frontier（showcase/standard 默认预期）。
+- **2026-09-05（#24 完成）**：**v1 迁移已合并——PR #25，mergeCommit `4d7e7f6`**（parser `exclude_dirs`；skill `/deep-module-review` 落成；frontend/backend 删除；README/.gitignore 收尾）。**v2 已合并——PR #26，mergeCommit `f73caf4`**（parser 第 6 键 `intra` + to_archify/assemble v2 管线 → map.html 可下钻模块地图；10 commits、22 文件 +7201/−95；121 测试全绿、golden 5 键逐字节一致、自扫 8 面板核验一致、降级 e2e ×3）。**issue #24 已随 PR #26 `Closes #24` 自动关闭——#24 全票完成。** showcase/standard 遗留拍板项已于当日消解（写进设计文档 §15 + README）。
 - **GitHub 仓库**：https://github.com/li-yongqvan/deep-module-mapper
 - **Canonical wayfinder map**：GitHub issue #1 — https://github.com/li-yongqvan/deep-module-mapper/issues/1
 - 本地 `wayfinder/*.md` 文件是 GitHub issues 的 mirror/缓存。
@@ -47,7 +47,7 @@ wayfinder: map
 ## Open frontier
 
 - **#24 已完成关闭**（2026-09-05）：v1（PR #25 `4d7e7f6`）+ v2（PR #26 `f73caf4`）均已合并，issue #24 经 `Closes #24` 自动关闭。当前**无 active frontier**。
-- **遗留待用户拍板**（只记录不代拍，源自 #24 v2）：「主图 showcase 对多模块仓库依赖簇不可达（本仓库已按评审接受 standard 降级）→ 是否把『standard 为多模块仓库默认预期』写进设计/README」。另：Artifact/生成页人工渲染确认事项已随 v2 改产出单文件 map.html（非 Artifact）而消解，无需再跟踪。
+- **遗留项已消解（2026-09-05 用户拍板）**：「主图 showcase 对多模块仓库依赖簇不可达」——用户拍板把「standard 为多模块仓库默认预期」写进设计文档 §15（新增「主图质量档位的实测预期」条目）与 README（管线说明新增质量档位条目），commit 见 git log。另：Artifact/生成页人工渲染确认事项已随 v2 改产出单文件 map.html（非 Artifact）而消解，无需再跟踪。
 - 其余：原「独立 Web 应用」路线待办（#22 现实/功能视图重设计 [已关闭/被 #24 取代]、Trace path、画布评审端点、GitHub 仓库来源）随方向转型废弃；如未来 skill 方向需要再重新评估立项。
 
 ## Not yet specified
