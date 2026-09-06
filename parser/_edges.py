@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import ast
 import builtins
+import warnings
 from dataclasses import dataclass, field
 
 from ._external import classify
@@ -101,7 +102,11 @@ def _strip_annotation(node: ast.AST) -> ast.AST:
         node = node.value
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         try:
-            return ast.parse(node.value, mode="eval").body
+            # #28 C: scanned-code annotation strings can raise the same
+            # compile-time warnings as the module body; keep them isolated.
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                return ast.parse(node.value, mode="eval").body
         except SyntaxError:
             return node
     return node
