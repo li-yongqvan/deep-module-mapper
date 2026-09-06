@@ -301,3 +301,32 @@ class TestFindRepoRoot:
         start.mkdir()
         with pytest.raises(RuntimeError, match="DEEP_MODULE_MAPPER_ROOT"):
             analyze._find_repo_root(start)
+
+
+# --- #28 A: zero-module guard ---------------------------------------------------
+class TestZeroModuleGuard:
+    """A repo with no .py files must fail loudly, not render an empty map."""
+
+    def test_empty_dir_aborts_with_clear_message(self, tmp_path, repo_root):
+        empty = tmp_path / "empty"
+        empty.mkdir()
+        with pytest.raises(RuntimeError, match="no Python modules found under"):
+            analyze.run(empty, repo_root)
+
+    def test_non_python_repo_aborts_and_states_language_coverage(self, tmp_path, repo_root):
+        # dogfood case: ai-forum is Go + Vue — the guard must name the gap
+        src = tmp_path / "ai-forum-like"
+        src.mkdir()
+        (src / "main.go").write_text("package main\n", encoding="utf-8")
+        (src / "App.vue").write_text("<template></template>\n", encoding="utf-8")
+        with pytest.raises(RuntimeError, match="Python only"):
+            analyze.run(src, repo_root)
+
+    def test_guard_writes_no_artefacts(self, tmp_path, repo_root):
+        src = tmp_path / "notes-only"
+        src.mkdir()
+        (src / "README.md").write_text("not code\n", encoding="utf-8")
+        out = tmp_path / "out"
+        with pytest.raises(RuntimeError, match="No artefacts written"):
+            analyze.run(src, repo_root, output_dir=out)
+        assert not out.exists()

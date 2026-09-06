@@ -110,6 +110,17 @@ def run(scan_path: str | Path, repo_root: Path, output_dir: Path | None = None) 
 
     graph = scan_codebase(path, exclude_dirs=set(EXCLUDE_DIRS))
 
+    # #28 A: a repo with no .py files (e.g. Go/Vue) used to fall through and
+    # render an empty map.html, hiding that the scan found nothing.  Guard
+    # loudly instead: nothing is written, the caller gets a clear message
+    # (including language coverage, the short-term stand-in for #30).
+    if not graph["modules"]:
+        raise RuntimeError(
+            f"no Python modules found under {path}: not a Python project, or no .py files "
+            "at all. This skill currently covers Python only (#30 tracks more languages). "
+            "No artefacts written."
+        )
+
     metrics = compute_metrics(graph, repo_name)
     digest = build_digest(graph, root=path, total_chars=API_TOTAL_DIGEST_CHARS)
     svg = build_svg(metrics, repo_name=repo_name)

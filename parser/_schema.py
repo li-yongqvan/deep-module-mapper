@@ -79,9 +79,10 @@ class ExternalModule:
 
 @dataclass
 class Diagnostic:
-    """A parser note: dynamic import, unresolved symbol or parse error."""
+    """A parser note: dynamic import, unresolved symbol, parse error, or a
+    star import's aggregated unresolved set (#28 B)."""
 
-    kind: str  # dynamic_import | unresolved_symbol | parse_error
+    kind: str  # dynamic_import | unresolved_symbol | parse_error | star_import_unresolved | duplicate_def
     moduleId: str
     line: int
     message: str

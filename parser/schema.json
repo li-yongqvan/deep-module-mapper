@@ -79,7 +79,7 @@
         "additionalProperties": false,
         "required": ["kind", "moduleId", "line", "message"],
         "properties": {
-          "kind": { "enum": ["dynamic_import", "unresolved_symbol", "parse_error", "duplicate_def"] },
+          "kind": { "enum": ["dynamic_import", "unresolved_symbol", "parse_error", "duplicate_def", "star_import_unresolved"] },
           "moduleId": { "type": "string" },
           "line": { "type": "integer" },
           "message": { "type": "string" }
